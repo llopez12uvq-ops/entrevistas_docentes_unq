@@ -147,8 +147,6 @@
       <div class="warning">La transcripción se realiza gratuitamente en este dispositivo. La primera vez, el navegador descargará el modelo y puede demorar varios minutos. El audio original también se guardará en Drive.</div>
       <audio id="preview" class="hide" controls></audio>
       <label>Transcripción<textarea id="transcript" placeholder="Podés corregir aquí la transcripción automática o escribir notas sobre la respuesta."></textarea></label>
-      <label style="margin-top:12px">Notas de la entrevistadora<textarea id="notes" placeholder="Repreguntas realizadas, observaciones o aclaraciones."></textarea></label>
-
       <div class="actions">
         <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
         <label class="btn">Adjuntar un audio existente<input id="audioFile" class="hide" type="file" accept="audio/*"></label>
@@ -424,7 +422,7 @@
       $("counter").textContent=`${state.index+1} de ${QUESTIONS.length}`;$("progressBar").style.width=`${(state.index+1)/QUESTIONS.length*100}%`;
       $("probes").innerHTML=item.p.map(x=>`<li>${x}</li>`).join("");$("prevBtn").disabled=state.index===0;
       $("nextBtn").textContent=state.index===QUESTIONS.length-1?"Ir al cierre":"Siguiente";$("nextBtn").disabled=!state.saved[state.index];
-      $("savedMark").classList.toggle("hide",!state.saved[state.index]);$("transcript").value="";$("notes").value="";
+      $("savedMark").classList.toggle("hide",!state.saved[state.index]);$("transcript").value="";
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
     }
     async function startInterview(){
@@ -483,8 +481,26 @@
       if(!state.audioBlob&&!$("transcript").value.trim()){setStatus($("saveStatus"),"Grabá o adjuntá un audio, o escribí la respuesta.","bad");return}
       $("saveBtn").disabled=true;setStatus($("saveStatus"),"Guardando en Drive…");
       try{
-        const item=QUESTIONS[state.index];const base64=state.audioBlob?await blobToBase64(state.audioBlob):"";
-        await callServer("guardarRespuesta",{accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:state.index+1,block:item.b,questionText:item.q,transcript:$("transcript").value.trim(),notes:$("notes").value.trim(),audioBase64:base64,mimeType:state.audioBlob?.type||""});
+        const item=QUESTIONS[state.index];
+        const payload={accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:state.index+1,block:item.b,questionText:item.q,transcript:$("transcript").value.trim(),notes:"",audioBase64:"",mimeType:state.audioBlob?.type||""};
+        if(state.audioBlob){
+          const base64=await blobToBase64(state.audioBlob);
+          const chunkSize=300000;
+          const totalChunks=Math.ceil(base64.length/chunkSize);
+          const uploadId=`q${state.index+1}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          for(let index=0;index<totalChunks;index++){
+            const percent=Math.round((index/totalChunks)*100);
+            setStatus($("saveStatus"),`Enviando el audio a Drive: ${percent} %`);
+            await callServer("guardarFragmentoAudio",{
+              accessCode:payload.accessCode,sessionId:state.sessionId,uploadId,
+              chunkIndex:index,chunk:base64.slice(index*chunkSize,(index+1)*chunkSize)
+            });
+          }
+          setStatus($("saveStatus"),"Reconstruyendo y guardando el audio en Drive…");
+          await callServer("guardarRespuestaConFragmentos",Object.assign({},payload,{uploadId,totalChunks}));
+        }else{
+          await callServer("guardarRespuesta",payload);
+        }
         state.saved[state.index]=true;saveLocal();$("savedMark").classList.remove("hide");$("nextBtn").disabled=false;setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
       }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
     }
