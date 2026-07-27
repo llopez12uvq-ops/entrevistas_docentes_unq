@@ -112,7 +112,7 @@
       <p>Gracias por participar. Esta entrevista forma parte de una investigación doctoral sobre la enseñanza mediada por inteligencia artificial generativa en la Universidad Nacional de Quilmes.</p>
       <p>Me interesa conocer tu experiencia y los sentidos que atribuís a las decisiones que tomás en tus propuestas de enseñanza. No hay respuestas correctas ni incorrectas. La información será tratada de manera confidencial y tu identidad será resguardada.</p>
       <p>Con tu autorización, las respuestas serán grabadas y transcriptas para recuperar fielmente la conversación. Podés optar por no responder alguna pregunta o finalizar la entrevista cuando lo desees.</p>
-      <label class="consent"><input id="consent" type="checkbox"><span id="consentText">Autorizo la grabación y transcripción de esta entrevista, así como la utilización de la información obtenida con fines académicos, bajo las condiciones de confidencialidad mencionadas.</span></label>
+      <label class="consent"><input id="consent" type="checkbox" required><span id="consentText">Autorizo la grabación y transcripción de esta entrevista, así como la utilización de la información obtenida con fines académicos, bajo las condiciones de confidencialidad mencionadas.</span></label>
       <div class="mic-check">
         <strong>Comprobación del micrófono</strong>
         <p>Antes de comenzar, presioná el botón y elegí <b>Permitir</b> cuando el navegador solicite acceso. La prueba no graba ni guarda audio.</p>
@@ -128,7 +128,7 @@
           </ol>
         </details>
       </div>
-      <div class="actions"><button id="startBtn" class="btn primary">Crear carpeta y comenzar</button></div>
+      <div class="actions"><button id="startBtn" class="btn primary" disabled>Crear carpeta y comenzar</button></div>
       <div id="setupStatus" class="status" role="status"></div>
     </section>
 
@@ -176,7 +176,7 @@
 
   <script>
     // Pegá aquí la URL de la implementación de Apps Script terminada en /exec.
-    const API_URL = "https://script.google.com/macros/s/AKfycbyXjdwJ9yM2_ru_qmV_xTT90C2XRu8XIP9rrYE0b9RBlOKj97WQ82hS7b5NejjopiiR9w/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbycVMkdhZUMFk34I8dBWA4p4kvKBgyk4nJ0q3MlIlj7h5IxPH-sEfSsvJ8iGWHQFTAc9w/exec";
 
     const QUESTIONS = [
       {b:"Bloque 1 · Trayectoria y experiencia docente",q:"Para comenzar, ¿podrías contarme brevemente sobre tu trayectoria docente y sobre la asignatura o espacio curricular en la que incorporaste IA generativa?",p:["¿Qué contenidos enseñás?","¿A qué estudiantes está dirigida la asignatura?","¿En qué nivel y modalidad se desarrolla?","¿Qué características tiene habitualmente la propuesta de enseñanza?"]},
@@ -417,6 +417,11 @@
       }catch(error){setStatus($("finishStatus"),error.message,"bad");$("finishBtn").disabled=false}
     }
 
+    $("consent").onchange=()=>{
+      $("startBtn").disabled=!$("consent").checked;
+      if(!$("consent").checked)setStatus($("setupStatus"),"Para comenzar, es necesario aceptar el consentimiento informado.");
+      else setStatus($("setupStatus"),"");
+    };
     $("testMicBtn").onclick=testMicrophone;
     $("department").onchange=updateCareers;
     $("modality").onchange=()=>{
