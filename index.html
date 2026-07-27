@@ -136,13 +136,12 @@
       <div class="question-top"><div class="progress"><span id="progressBar"></span></div><div id="counter" class="counter"></div></div>
       <div id="block" class="block"></div>
       <div id="question" class="question"></div>
-      <details><summary>Posibles repreguntas</summary><ul id="probes"></ul></details>
+      <details open><summary>Posibles repreguntas</summary><ul id="probes"></ul></details>
 
       <h2 style="margin-top:24px">Respuesta</h2>
       <div class="actions">
         <button id="recordBtn" class="btn primary">Grabar audio</button>
         <button id="stopBtn" class="btn danger" disabled>Detener</button>
-        <label class="btn" style="display:inline-flex;align-items:center;gap:7px"><input id="speechEnabled" type="checkbox" style="width:auto"> Transcribir mientras graba</label>
       </div>
       <div id="recordStatus" class="status"></div>
       <div class="warning">La transcripción automática depende del navegador y puede contener errores. El audio original también se guardará en Drive.</div>
@@ -380,18 +379,27 @@
         state.recorder.ondataavailable=e=>e.data.size&&state.chunks.push(e.data);
         state.recorder.onstop=()=>{state.audioBlob=new Blob(state.chunks,{type:state.recorder.mimeType||"audio/webm"});showAudio();stream.getTracks().forEach(t=>t.stop())};
         state.recorder.start();$("recordBtn").disabled=true;$("stopBtn").disabled=false;setStatus($("recordStatus"),"Grabando…","rec");
-        if($("speechEnabled").checked)startSpeech();
+        startSpeech();
       }catch{setStatus($("recordStatus"),"No se pudo acceder al micrófono. Revisá el permiso del navegador.","bad")}
     }
     function stopRecording(){
-      if(state.recorder?.state==="recording")state.recorder.stop();if(state.recognition)try{state.recognition.stop()}catch{}
+      if(state.recorder?.state==="recording")state.recorder.stop();
+      const recognition=state.recognition;state.recognition=null;
+      if(recognition)try{recognition.stop()}catch{}
       $("recordBtn").disabled=false;$("stopBtn").disabled=true;setStatus($("recordStatus"),"Audio listo para guardar.","ok");
     }
     function startSpeech(){
-      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setStatus($("recordStatus"),"La grabación continúa, pero este navegador no permite transcribir automáticamente.");return}
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setStatus($("recordStatus"),"La grabación continúa, pero este navegador no admite la transcripción automática. El audio se guardará igualmente.","bad");return}
       const rec=new SR();rec.lang="es-AR";rec.continuous=true;rec.interimResults=true;let finalText=$("transcript").value;
       rec.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)finalText+=(finalText?" ":"")+e.results[i][0].transcript.trim();else interim+=e.results[i][0].transcript}$("transcript").value=finalText+(interim?" "+interim:"")};
-      rec.onerror=()=>setStatus($("recordStatus"),"La grabación continúa; la transcripción automática se interrumpió.");rec.start();state.recognition=rec;
+      rec.onerror=e=>{if(e.error!=="no-speech")setStatus($("recordStatus"),"La grabación continúa; la transcripción automática se interrumpió.","bad")};
+      rec.onend=()=>{
+        if(state.recognition===rec&&state.recorder?.state==="recording"){
+          try{rec.start()}catch{}
+        }
+      };
+      try{rec.start();state.recognition=rec;setStatus($("recordStatus"),"Grabando y transcribiendo automáticamente…","rec")}
+      catch{setStatus($("recordStatus"),"La grabación continúa, pero no se pudo iniciar la transcripción automática.","bad")}
     }
     function showAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl=URL.createObjectURL(state.audioBlob);$("preview").src=state.audioUrl;$("preview").classList.remove("hide")}
     function resetAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl="";state.audioBlob=null;$("preview").classList.add("hide");$("audioFile").value=""}
