@@ -31,6 +31,7 @@
     .mic-check strong{display:block;margin-bottom:4px;color:var(--navy);font-size:1.02rem}
     .mic-check p{margin:0;color:var(--muted);font-size:.91rem}
     .mic-check details{margin-top:14px;background:#fff}.mic-check details ol{margin:0;padding:0 38px 16px}.mic-check details li{margin:7px 0}
+    .material-upload{margin:18px 0;padding:18px;border:1px solid #bfe4f4;border-radius:16px;background:#f5fcff}.material-upload h3{margin:0 0 6px;color:var(--navy)}.file-list{margin:10px 0 0;padding-left:22px;color:var(--muted)}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     label{display:grid;gap:7px;color:var(--muted);font-size:.88rem;font-weight:750}
     input,select,textarea{width:100%;padding:12px 13px;border:1px solid #cbdfe9;border-radius:12px;background:white;color:var(--ink);outline:none;transition:.18s ease}
@@ -147,25 +148,43 @@
       <div class="warning">La transcripción se generará automáticamente y puede demorar unos minutos. Al guardar la respuesta, el audio original y la transcripción se almacenarán en Drive.</div>
       <audio id="preview" class="hide" controls></audio>
       <label>Transcripción<textarea id="transcript" placeholder="Podés corregir aquí la transcripción automática o escribir notas sobre la respuesta."></textarea></label>
+      <div id="materialUpload" class="material-upload hide">
+        <h3>Adjuntar materiales de enseñanza</h3>
+        <p>Podés seleccionar uno o varios archivos. Verificá previamente que no contengan información que permita identificar a estudiantes.</p>
+        <label class="btn" style="display:inline-flex;width:auto">Seleccionar archivos
+          <input id="materialFiles" class="hide" type="file" multiple accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.jpg,.jpeg,.png">
+        </label>
+        <ul id="materialFileList" class="file-list"></ul>
+        <p><small>Para enviarlos, presioná <b>Guardar respuesta en Drive</b>.</small></p>
+      </div>
       <div class="actions">
         <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
         <label class="btn">Adjuntar un audio existente<input id="audioFile" class="hide" type="file" accept="audio/*"></label>
         <span id="savedMark" class="saved hide">✓ Guardada</span>
       </div>
       <div id="saveStatus" class="status" role="status"></div>
+      <p class="counter">Podés avanzar sin responder y volver a esta pregunta cuando lo desees.</p>
       <div class="nav">
         <button id="prevBtn" class="btn">Anterior</button>
-        <button id="nextBtn" class="btn" disabled>Siguiente</button>
+        <button id="nextBtn" class="btn">Siguiente</button>
       </div>
     </section>
 
     <section id="finishCard" class="card hide">
       <h2>Finalización</h2>
       <p>¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?</p>
+      <div class="actions">
+        <button id="finishRecordBtn" class="btn primary">Grabar respuesta final</button>
+        <button id="finishStopBtn" class="btn danger" disabled>Detener</button>
+      </div>
+      <div id="finishRecordStatus" class="status"></div>
+      <audio id="finishPreview" class="hide" controls></audio>
       <label>Respuesta final<textarea id="finalAnswer"></textarea></label>
       <label class="consent"><input id="followUp" type="checkbox"><span>Acepto ser contactada nuevamente para aclarar o ampliar aspectos de la entrevista.</span></label>
-      <label style="margin-top:12px">Material que enviará posteriormente<input id="materialCommitment" placeholder="Consigna, orientación de actividad, trabajo práctico u otro material"></label>
-      <div class="actions"><button id="finishBtn" class="btn primary">Finalizar y guardar en Drive</button></div>
+      <div class="actions">
+        <button id="backToQuestionsBtn" class="btn">Volver a las preguntas</button>
+        <button id="finishBtn" class="btn primary">Finalizar y guardar en Drive</button>
+      </div>
       <div id="finishStatus" class="status" role="status"></div>
     </section>
   </main>
@@ -192,7 +211,7 @@
       {b:"Bloque 6 · Modalidades de enseñanza",q:"¿Qué relación encontrás entre la modalidad de cursada y la manera en que incorporaste IA generativa en la propuesta?",p:["¿La modalidad presencial, virtual o bimodal modificó las formas de orientar y acompañar a los estudiantes?","¿Cómo incidió en la comunicación y en la interacción?","¿Qué posibilidades o dificultades aparecieron en relación con los tiempos de trabajo?","¿Cómo influyó en el acceso a los sistemas de IA?","¿La modalidad modificó las posibilidades de seguir el proceso realizado por los estudiantes?","¿Incidió en las decisiones de evaluación o en las evidencias solicitadas para reconocer el aprendizaje?","Si tenés experiencia en más de una modalidad, ¿qué diferencias y continuidades observás?"]},
       {b:"Bloque 7 · Particularidades del campo disciplinar",q:"¿Qué relación encontrás entre la incorporación de IA generativa y las características del campo disciplinar en el que enseñás?",p:["¿Considerás que las características de la disciplina influyeron en la manera de incorporar IA generativa? ¿De qué forma?","¿Qué saberes disciplinares necesitaron los estudiantes para trabajar con las respuestas o producciones generadas?","¿Qué posibilidades encontraste para la enseñanza de los contenidos de tu campo?","¿Qué dificultades, límites o precauciones identificaste?","¿Aparecieron cuestiones propias de la disciplina que fue necesario abordar?","¿Considerás que esta experiencia podría desarrollarse de la misma manera en otro campo disciplinar? ¿Por qué?"]},
       {b:"Bloque 8 · Consignas y materiales de enseñanza",q:"En relación con la experiencia que relataste, ¿elaboraste o utilizaste alguna consigna, orientación de actividad, trabajo práctico u otro material vinculado con el uso de IA generativa?",p:["¿De qué tipo de material se trata?","¿Con qué propósito lo elaboraste o seleccionaste?","¿Qué orientaciones ofrecía a los estudiantes?","¿Qué esperabas que hicieran a partir de ese material?","¿Incluía criterios de evaluación o pautas relacionadas con el uso de IA generativa?","¿Realizaste modificaciones durante el desarrollo de la actividad?"]},
-      {b:"Bloque 8 · Consignas y materiales de enseñanza",q:"¿Podrías buscar ese material y enviármelo posteriormente para incorporarlo al análisis documental de la investigación?",p:["Una vez localizado: ¿qué aspectos del material considerás más importantes?","¿Qué decisiones vinculadas con la IA generativa pueden reconocerse en él?","¿Cómo se relaciona lo planteado en el documento con lo que ocurrió durante la actividad?","¿Realizaste ajustes o brindaste orientaciones adicionales que no hayan quedado registrados?","Si volvieras a utilizar el material, ¿qué modificarías? ¿Por qué?"]}
+      {b:"Bloque 8 · Consignas y materiales de enseñanza",q:"¿Podrías buscar ese material y enviármelo para incorporarlo al análisis documental de la investigación?",p:["Una vez localizado: ¿qué aspectos del material considerás más importantes?","¿Qué decisiones vinculadas con la IA generativa pueden reconocerse en él?","¿Cómo se relaciona lo planteado en el documento con lo que ocurrió durante la actividad?","¿Realizaste ajustes o brindaste orientaciones adicionales que no hayan quedado registrados?","Si volvieras a utilizar el material, ¿qué modificarías? ¿Por qué?"]}
     ];
 
     const CAREERS = {
@@ -248,7 +267,7 @@
     };
 
     const $=id=>document.getElementById(id);
-    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},transcribing:false,transcriptionReady:false};
+    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false};
     const localKey="entrevista-docente-unq-v2";
     let whisperWorker=null;
     let whisperRequest=0;
@@ -421,9 +440,36 @@
       const item=QUESTIONS[state.index];$("block").textContent=item.b;$("question").textContent=`${state.index+1}. ${item.q}`;
       $("counter").textContent=`${state.index+1} de ${QUESTIONS.length}`;$("progressBar").style.width=`${(state.index+1)/QUESTIONS.length*100}%`;
       $("probes").innerHTML=item.p.map(x=>`<li>${x}</li>`).join("");$("prevBtn").disabled=state.index===0;
-      $("nextBtn").textContent=state.index===QUESTIONS.length-1?"Ir al cierre":"Siguiente";$("nextBtn").disabled=!state.saved[state.index];
+      $("nextBtn").textContent=state.index===QUESTIONS.length-1?"Ir al cierre":"Siguiente";$("nextBtn").disabled=false;
       $("savedMark").classList.toggle("hide",!state.saved[state.index]);$("transcript").value="";
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
+      state.materialFiles=[];$("materialFiles").value="";$("materialFileList").innerHTML="";
+      $("materialUpload").classList.toggle("hide",state.index!==16);
+      const draft=state.drafts[state.index];
+      if(draft){
+        $("transcript").value=draft.transcript||"";
+        state.audioBlob=draft.audioBlob||null;
+        state.transcriptionReady=Boolean(draft.transcriptionReady);
+        state.materialFiles=draft.materialFiles||[];
+        renderMaterialFiles();
+        if(state.audioBlob)showAudio();
+      }
+    }
+    function renderMaterialFiles(){
+      $("materialFileList").innerHTML=state.materialFiles.map(file=>`<li>${file.name}</li>`).join("");
+    }
+    function preserveCurrentDraft(){
+      const transcript=$("transcript").value;
+      if(transcript.trim()||state.audioBlob||state.materialFiles.length){
+        state.drafts[state.index]={transcript,audioBlob:state.audioBlob,transcriptionReady:state.transcriptionReady,materialFiles:state.materialFiles};
+      }else{
+        delete state.drafts[state.index];
+      }
+    }
+    function canChangeQuestion(){
+      if(state.recorder?.state==="recording"){setStatus($("recordStatus"),"Detené la grabación antes de cambiar de pregunta.","bad");return false}
+      if(state.transcribing){setStatus($("recordStatus"),"Esperá a que finalice la transcripción antes de cambiar de pregunta.","bad");return false}
+      return true;
     }
     async function startInterview(){
       const payload=collectSetup();
@@ -437,7 +483,7 @@
       $("startBtn").disabled=true;
       try{
         const result=await callServer("iniciarEntrevista",payload);state.sessionId=result.sessionId;
-        $("heroTitle").textContent=`Entrevista a ${payload.participantName}`;saveLocal();
+        $("heroTitle").textContent="Entrevista docente";saveLocal();
         $("setupCard").classList.add("hide");$("questionCard").classList.remove("hide");render();
       }catch(error){setStatus($("setupStatus"),error.message,"bad");$("startBtn").disabled=false}
     }
@@ -452,6 +498,49 @@
         state.recorder.start();$("recordBtn").disabled=true;$("stopBtn").disabled=false;setStatus($("recordStatus"),"Grabando…","rec");
         startSpeech();
       }catch{setStatus($("recordStatus"),"No se pudo acceder al micrófono. Revisá el permiso del navegador.","bad")}
+    }
+    async function startFinalRecording(){
+      if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){setStatus($("finishRecordStatus"),"Este navegador no permite grabar audio.","bad");return}
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        const chunks=[];
+        const preferred=["audio/webm;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+        state.finalRecorder=new MediaRecorder(stream,preferred?{mimeType:preferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000});
+        state.finalRecorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+        state.finalRecorder.onstop=async()=>{
+          state.finalAudioBlob=new Blob(chunks,{type:state.finalRecorder.mimeType||"audio/webm"});
+          if(state.finalAudioUrl)URL.revokeObjectURL(state.finalAudioUrl);
+          state.finalAudioUrl=URL.createObjectURL(state.finalAudioBlob);
+          $("finishPreview").src=state.finalAudioUrl;$("finishPreview").classList.remove("hide");
+          stream.getTracks().forEach(t=>t.stop());
+          await transcribeFinalAudioLocally();
+        };
+        state.finalRecorder.start();$("finishRecordBtn").disabled=true;$("finishStopBtn").disabled=false;
+        setStatus($("finishRecordStatus"),"Grabando respuesta final…","rec");
+      }catch{setStatus($("finishRecordStatus"),"No se pudo acceder al micrófono. Revisá el permiso del navegador.","bad")}
+    }
+    function stopFinalRecording(){
+      if(state.finalRecorder?.state==="recording")state.finalRecorder.stop();
+      $("finishRecordBtn").disabled=false;$("finishStopBtn").disabled=true;
+    }
+    async function transcribeFinalAudioLocally(){
+      state.finalTranscribing=true;state.finalTranscriptionReady=false;$("finishBtn").disabled=true;
+      setStatus($("finishRecordStatus"),"Preparando la transcripción de la respuesta final…");
+      try{
+        const audio=await decodeAudio16k(state.finalAudioBlob);
+        const id=++whisperRequest;
+        const transcript=await new Promise((resolve,reject)=>{
+          whisperPending.set(id,{resolve,reject,status:text=>setStatus($("finishRecordStatus"),text)});
+          getWhisperWorker().postMessage({id,audio},[audio.buffer]);
+        });
+        if(!transcript)throw new Error("No se reconoció voz en el audio.");
+        $("finalAnswer").value=transcript;state.finalTranscriptionReady=true;
+        setStatus($("finishRecordStatus"),"Respuesta final transcripta automáticamente.","ok");
+      }catch(error){
+        setStatus($("finishRecordStatus"),`No se pudo transcribir la respuesta final: ${error.message}`,"bad");
+      }finally{
+        state.finalTranscribing=false;$("finishBtn").disabled=false;
+      }
     }
     function stopRecording(){
       if(state.recorder?.state==="recording")state.recorder.stop();
@@ -475,10 +564,29 @@
     function showAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl=URL.createObjectURL(state.audioBlob);$("preview").src=state.audioUrl;$("preview").classList.remove("hide")}
     function resetAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl="";state.audioBlob=null;state.transcribing=false;state.transcriptionReady=false;$("preview").classList.add("hide");$("audioFile").value=""}
     function blobToBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(",")[1]);r.onerror=reject;r.readAsDataURL(blob)})}
+    async function uploadMaterial(file,fileIndex,totalFiles){
+      if(file.size>20*1024*1024)throw new Error(`El archivo “${file.name}” supera el máximo de 20 MB.`);
+      const base64=await blobToBase64(file);
+      const chunkSize=300000;
+      const totalChunks=Math.ceil(base64.length/chunkSize);
+      const uploadId=`material_${Date.now()}_${fileIndex}_${Math.random().toString(36).slice(2)}`;
+      for(let index=0;index<totalChunks;index++){
+        const percent=Math.round((index/totalChunks)*100);
+        setStatus($("saveStatus"),`Enviando material ${fileIndex+1} de ${totalFiles}: ${percent} %`);
+        await callServer("guardarFragmentoMaterial",{
+          accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,uploadId,
+          chunkIndex:index,chunk:base64.slice(index*chunkSize,(index+1)*chunkSize)
+        });
+      }
+      await callServer("guardarMaterialConFragmentos",{
+        accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,uploadId,
+        totalChunks,fileName:file.name,mimeType:file.type||"application/octet-stream"
+      });
+    }
     async function saveAnswer(){
       if(state.transcribing){setStatus($("saveStatus"),"Esperá a que finalice la transcripción automática.","bad");return}
       if(state.audioBlob&&!state.transcriptionReady){setStatus($("saveStatus"),"El audio todavía no cuenta con una transcripción. Volvé a adjuntarlo o grabarlo para reintentar.","bad");return}
-      if(!state.audioBlob&&!$("transcript").value.trim()){setStatus($("saveStatus"),"Grabá o adjuntá un audio, o escribí la respuesta.","bad");return}
+      if(!state.audioBlob&&!$("transcript").value.trim()&&!state.materialFiles.length){setStatus($("saveStatus"),"Grabá o adjuntá un audio, escribí la respuesta o adjuntá un material.","bad");return}
       $("saveBtn").disabled=true;setStatus($("saveStatus"),"Guardando en Drive…");
       try{
         const item=QUESTIONS[state.index];
@@ -501,16 +609,33 @@
         }else{
           await callServer("guardarRespuesta",payload);
         }
-        state.saved[state.index]=true;saveLocal();$("savedMark").classList.remove("hide");$("nextBtn").disabled=false;setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
+        for(let index=0;index<state.materialFiles.length;index++){
+          await uploadMaterial(state.materialFiles[index],index,state.materialFiles.length);
+        }
+        state.saved[state.index]=true;preserveCurrentDraft();saveLocal();$("savedMark").classList.remove("hide");setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
       }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
     }
     async function finish(){
+      if(state.finalRecorder?.state==="recording"){setStatus($("finishStatus"),"Detené la grabación final antes de finalizar la entrevista.","bad");return}
+      if(state.finalTranscribing){setStatus($("finishStatus"),"Esperá a que termine la transcripción de la respuesta final.","bad");return}
+      if(state.finalAudioBlob&&!state.finalTranscriptionReady){setStatus($("finishStatus"),"La respuesta final grabada todavía no cuenta con transcripción.","bad");return}
       $("finishBtn").disabled=true;setStatus($("finishStatus"),"Finalizando la entrevista…");
       try{
-        if($("finalAnswer").value.trim()){
-          await callServer("guardarRespuesta",{accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:18,block:"Cierre",questionText:"¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?",transcript:$("finalAnswer").value.trim(),notes:"",audioBase64:"",mimeType:""});
+        const finalPayload={accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:18,block:"Cierre",questionText:"¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?",transcript:$("finalAnswer").value.trim(),notes:"",audioBase64:"",mimeType:state.finalAudioBlob?.type||""};
+        if(state.finalAudioBlob){
+          const base64=await blobToBase64(state.finalAudioBlob);
+          const chunkSize=300000;
+          const totalChunks=Math.ceil(base64.length/chunkSize);
+          const uploadId=`cierre_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          for(let index=0;index<totalChunks;index++){
+            setStatus($("finishStatus"),`Guardando el audio final: ${Math.round((index/totalChunks)*100)} %`);
+            await callServer("guardarFragmentoAudio",{accessCode:finalPayload.accessCode,sessionId:state.sessionId,uploadId,chunkIndex:index,chunk:base64.slice(index*chunkSize,(index+1)*chunkSize)});
+          }
+          await callServer("guardarRespuestaConFragmentos",Object.assign({},finalPayload,{uploadId,totalChunks}));
+        }else if(finalPayload.transcript){
+          await callServer("guardarRespuesta",finalPayload);
         }
-        const result=await callServer("finalizarEntrevista",{accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,acceptsFollowUp:$("followUp").checked,materialCommitment:$("materialCommitment").value.trim()});
+        const result=await callServer("finalizarEntrevista",{accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,acceptsFollowUp:$("followUp").checked,materialCommitment:""});
         setStatus($("finishStatus"),`Entrevista finalizada. Los archivos quedaron guardados en la carpeta “${result.folderName}”.`,"ok");
         localStorage.removeItem(localKey);
       }catch(error){setStatus($("finishStatus"),error.message,"bad");$("finishBtn").disabled=false}
@@ -530,9 +655,16 @@
       updateCareers();
     };
     $("startBtn").onclick=startInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
+    $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;
     $("audioFile").onchange=async e=>{const f=e.target.files[0];if(f){state.audioBlob=f;showAudio();await transcribeAudioLocally()}};
-    $("prevBtn").onclick=()=>{if(state.index>0){state.index--;saveLocal();render()}};
-    $("nextBtn").onclick=()=>{if(state.index<QUESTIONS.length-1){state.index++;saveLocal();render()}else{$("questionCard").classList.add("hide");$("finishCard").classList.remove("hide")}};
+    $("materialFiles").onchange=e=>{state.materialFiles=Array.from(e.target.files||[]);renderMaterialFiles()};
+    $("prevBtn").onclick=()=>{if(state.index>0&&canChangeQuestion()){preserveCurrentDraft();state.index--;saveLocal();render()}};
+    $("nextBtn").onclick=()=>{if(!canChangeQuestion())return;preserveCurrentDraft();if(state.index<QUESTIONS.length-1){state.index++;saveLocal();render()}else{$("questionCard").classList.add("hide");$("finishCard").classList.remove("hide")}};
+    $("backToQuestionsBtn").onclick=()=>{
+      if(state.finalRecorder?.state==="recording"){setStatus($("finishStatus"),"Detené la grabación final antes de volver.","bad");return}
+      if(state.finalTranscribing){setStatus($("finishStatus"),"Esperá a que termine la transcripción final antes de volver.","bad");return}
+      $("finishCard").classList.add("hide");$("questionCard").classList.remove("hide");render()
+    };
     window.addEventListener("beforeunload",saveLocal);restoreLocal();
   </script>
 </body>
