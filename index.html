@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1cabe2">
+  <title>Entrevista docente · UNQ</title>
+  <style>
+    :root{
+      --blue:#1cabe2;--blue-dark:#0067a5;--navy:#123a59;--sky:#eaf8fd;
+      --ink:#183247;--muted:#5e7485;--paper:#fff;--line:#d7eaf3;--good:#16855b;
+      --bad:#c43d4f;--warn:#936514;--yellow:#ffc20e;--shadow:0 18px 50px rgba(0,103,165,.11)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;color:var(--ink);background:linear-gradient(180deg,#f4fbfe 0,#eef8fc 48%,#f8fbfd 100%);font-family:Arial,Helvetica,sans-serif;line-height:1.55}
+    body:before{content:"";position:fixed;z-index:-1;top:-160px;right:-120px;width:420px;height:420px;border-radius:50%;background:rgba(28,171,226,.12)}
+    button,input,textarea,select{font:inherit}.shell{width:min(940px,calc(100% - 28px));margin:auto}
+    header{padding:22px 0 15px}.brand{display:flex;align-items:center;gap:12px;color:var(--navy);font-weight:800}
+    .mark{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:var(--blue);color:white;font-size:.82rem;box-shadow:0 8px 20px rgba(28,171,226,.28)}
+    .brand small{display:block;color:var(--muted);font-weight:600}
+    .hero,.card{background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow)}
+    .hero{position:relative;overflow:hidden;padding:clamp(30px,6vw,60px);border-radius:30px;background:linear-gradient(135deg,#fff 0%,#fff 64%,#e4f7fd 100%)}
+    .hero:after{content:"";position:absolute;right:-55px;bottom:-75px;width:210px;height:210px;border:28px solid rgba(28,171,226,.13);border-radius:50%}
+    .eyebrow{display:inline-flex;margin:0 0 12px;padding:6px 11px;border-radius:999px;background:var(--sky);color:var(--blue-dark);font-size:.76rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+    h1,h2{color:var(--navy);letter-spacing:-.025em}h1{position:relative;z-index:1;margin:0;font-size:clamp(2.35rem,7vw,4.65rem);line-height:1.02;font-weight:850}
+    h2{margin:0 0 14px;font-size:1.65rem}.lead{position:relative;z-index:1;max-width:690px;color:var(--muted);font-size:1.06rem}
+    .card{margin:22px 0;padding:clamp(22px,4vw,38px);border-radius:24px}
+    .notice{position:relative;z-index:1;padding:14px 16px;border-left:4px solid var(--yellow);border-radius:4px 13px 13px 4px;background:#fff9df;color:var(--navy);font-size:.92rem}
+    .mic-check{margin:22px 0 8px;padding:18px;border:1px solid #bfe4f4;border-radius:16px;background:#f5fcff}
+    .mic-check strong{display:block;margin-bottom:4px;color:var(--navy);font-size:1.02rem}
+    .mic-check p{margin:0;color:var(--muted);font-size:.91rem}
+    .mic-check details{margin-top:14px;background:#fff}.mic-check details ol{margin:0;padding:0 38px 16px}.mic-check details li{margin:7px 0}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    label{display:grid;gap:7px;color:var(--muted);font-size:.88rem;font-weight:750}
+    input,select,textarea{width:100%;padding:12px 13px;border:1px solid #cbdfe9;border-radius:12px;background:white;color:var(--ink);outline:none;transition:.18s ease}
+    input[readonly]{background:#f1f7fa;color:var(--navy);cursor:not-allowed}
+    input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(28,171,226,.13)}
+    textarea{min-height:130px;resize:vertical}.consent{display:flex;align-items:flex-start;gap:11px;margin-top:18px;padding:16px;border:1px solid #bfe4f4;border-radius:15px;background:var(--sky)}
+    .consent input{width:20px;height:20px;margin-top:2px;accent-color:var(--blue-dark)}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.btn{border:1px solid #cbdfe9;border-radius:12px;padding:11px 16px;background:white;color:var(--navy);font-weight:800;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+    .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,103,165,.12)}
+    .btn.primary{border-color:var(--blue-dark);background:var(--blue-dark);color:white}.btn.primary:hover:not(:disabled){background:#00578e}.btn.danger{border-color:#efc1c8;color:var(--bad);background:#fff7f8}.btn:disabled{cursor:not-allowed;opacity:.45}
+    .hide{display:none!important}.question-top{display:flex;align-items:center;gap:12px}.progress{flex:1;height:10px;border-radius:10px;background:#deeff6;overflow:hidden}.progress span{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,var(--blue),#50c7ed);transition:width .3s ease}
+    .counter{white-space:nowrap;color:var(--blue-dark);font-size:.9rem;font-weight:850}.block{display:inline-block;margin-top:22px;padding:6px 10px;border-radius:999px;background:var(--sky);color:var(--blue-dark);font-size:.76rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+    .question{margin:13px 0 20px;color:var(--navy);font-size:clamp(1.38rem,4vw,2rem);font-weight:800;line-height:1.28}
+    details{margin:14px 0;border:1px solid var(--line);border-radius:14px;background:#f7fcfe}summary{padding:13px 15px;cursor:pointer;color:var(--blue-dark);font-weight:800}details ul{margin:0;padding:0 36px 16px}details li{margin:7px 0}
+    .status{min-height:26px;margin-top:9px;color:var(--muted);font-size:.92rem}.status.ok{color:var(--good);font-weight:700}.status.bad{color:var(--bad);font-weight:700}.status.rec{color:var(--bad);font-weight:800}
+    audio{width:100%;margin:10px 0}.warning{padding:11px 13px;border-left:4px solid var(--warn);background:#fff7e7;color:#68470f;font-size:.88rem}
+    .nav{display:flex;justify-content:space-between;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}.saved{display:inline-flex;align-items:center;gap:6px;color:var(--good);font-size:.9rem;font-weight:800}
+    footer{padding:26px 0 45px;text-align:center;color:var(--muted);font-size:.87rem}
+    @media(max-width:650px){.grid{grid-template-columns:1fr}.hero{border-radius:22px}.hero:after{opacity:.5}.question{font-size:1.43rem}.btn{flex-grow:1}.brand small{display:none}}
+  </style>
+</head>
+<body>
+  <header class="shell"><div class="brand"><span class="mark">UNQ</span><span>Entrevistas docentes<small>Investigación doctoral</small></span></div></header>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">La enseñanza mediada por IA generativa</p>
+      <h1 id="heroTitle">Entrevista docente</h1>
+      <p class="lead">Las respuestas de audio y las transcripciones se guardarán directamente en una carpeta de la investigadora en Google Drive.</p>
+      <div class="notice">Cada respuesta se envía a Drive al presionar <strong>Guardar respuesta</strong>. Esperá la confirmación antes de avanzar a la pregunta siguiente.</div>
+    </section>
+
+    <section id="setupCard" class="card">
+      <h2>Datos de la entrevista</h2>
+      <div class="grid">
+        <label>Código de acceso<input id="accessCode" type="password" autocomplete="off"></label>
+        <label>Código de entrevista<input id="participantCode" placeholder="Ej.: E01" autocomplete="off"></label>
+        <label>Nombre de la persona entrevistada<input id="participantName" placeholder="Nombre y apellido" autocomplete="off"></label>
+        <label>Departamento o Escuela
+          <select id="department">
+            <option value="">Seleccionar</option>
+            <option>Departamento de Ciencia y Tecnología</option>
+            <option>Departamento de Ciencias Sociales</option>
+            <option>Departamento de Economía y Administración</option>
+            <option>Escuela de Artes</option>
+          </select>
+        </label>
+        <label>Modalidad
+          <select id="modality">
+            <option value="">Seleccionar</option>
+            <option>Presencial</option>
+            <option>Virtual</option>
+          </select>
+        </label>
+        <label id="presenceTypeField" class="hide">Tipo de cursada presencial
+          <select id="presenceType">
+            <option value="">Seleccionar</option>
+            <option>Sin campus</option>
+            <option>Con campus</option>
+            <option>Semi presencial</option>
+          </select>
+        </label>
+        <label>Carrera
+          <select id="career" disabled>
+            <option value="">Seleccioná primero el departamento y la modalidad</option>
+          </select>
+        </label>
+        <label>Asignatura o espacio curricular<input id="course" autocomplete="off"></label>
+        <label>Nivel
+          <select id="level">
+            <option value="">Seleccionar</option>
+            <option>Pregrado</option>
+            <option>Grado</option>
+          </select>
+        </label>
+        <label>Antigüedad docente<input id="seniority" autocomplete="off"></label>
+      </div>
+
+      <h2 style="margin-top:26px">Presentación y consentimiento</h2>
+      <p>Gracias por participar. Esta entrevista forma parte de una investigación doctoral sobre la enseñanza mediada por inteligencia artificial generativa en la Universidad Nacional de Quilmes.</p>
+      <p>Me interesa conocer tu experiencia y los sentidos que atribuís a las decisiones que tomás en tus propuestas de enseñanza. No hay respuestas correctas ni incorrectas. La información será tratada de manera confidencial y tu identidad será resguardada.</p>
+      <p>Con tu autorización, las respuestas serán grabadas y transcriptas para recuperar fielmente la conversación. Podés optar por no responder alguna pregunta o finalizar la entrevista cuando lo desees.</p>
+      <label class="consent"><input id="consent" type="checkbox"><span id="consentText">Autorizo la grabación y transcripción de esta entrevista, así como la utilización de la información obtenida con fines académicos, bajo las condiciones de confidencialidad mencionadas.</span></label>
+      <div class="mic-check">
+        <strong>Comprobación del micrófono</strong>
+        <p>Antes de comenzar, presioná el botón y elegí <b>Permitir</b> cuando el navegador solicite acceso. La prueba no graba ni guarda audio.</p>
+        <div class="actions"><button id="testMicBtn" class="btn">Probar y autorizar micrófono</button></div>
+        <div id="micStatus" class="status" role="status"></div>
+        <details>
+          <summary>¿El permiso del micrófono está bloqueado?</summary>
+          <ol>
+            <li>Presioná el ícono ubicado a la izquierda de la dirección web.</li>
+            <li>Ingresá en <b>Configuración del sitio</b>.</li>
+            <li>En <b>Micrófono</b>, seleccioná <b>Permitir</b>.</li>
+            <li>Volvé a esta página, recargala y realizá nuevamente la prueba.</li>
+          </ol>
+        </details>
+      </div>
+      <div class="actions"><button id="startBtn" class="btn primary">Crear carpeta y comenzar</button></div>
+      <div id="setupStatus" class="status" role="status"></div>
+    </section>
+
+    <section id="questionCard" class="card hide">
+      <div class="question-top"><div class="progress"><span id="progressBar"></span></div><div id="counter" class="counter"></div></div>
+      <div id="block" class="block"></div>
+      <div id="question" class="question"></div>
+      <details><summary>Posibles repreguntas</summary><ul id="probes"></ul></details>
+
+      <h2 style="margin-top:24px">Respuesta</h2>
+      <div class="actions">
+        <button id="recordBtn" class="btn primary">Grabar audio</button>
+        <button id="stopBtn" class="btn danger" disabled>Detener</button>
+        <label class="btn" style="display:inline-flex;align-items:center;gap:7px"><input id="speechEnabled" type="checkbox" style="width:auto"> Transcribir mientras graba</label>
+      </div>
+      <div id="recordStatus" class="status"></div>
+      <div class="warning">La transcripción automática depende del navegador y puede contener errores. El audio original también se guardará en Drive.</div>
+      <audio id="preview" class="hide" controls></audio>
+      <label>Transcripción<textarea id="transcript" placeholder="Podés corregir aquí la transcripción automática o escribir notas sobre la respuesta."></textarea></label>
+      <label style="margin-top:12px">Notas de la entrevistadora<textarea id="notes" placeholder="Repreguntas realizadas, observaciones o aclaraciones."></textarea></label>
+
+      <div class="actions">
+        <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
+        <label class="btn">Adjuntar un audio existente<input id="audioFile" class="hide" type="file" accept="audio/*"></label>
+        <span id="savedMark" class="saved hide">✓ Guardada</span>
+      </div>
+      <div id="saveStatus" class="status" role="status"></div>
+      <div class="nav">
+        <button id="prevBtn" class="btn">Anterior</button>
+        <button id="nextBtn" class="btn" disabled>Siguiente</button>
+      </div>
+    </section>
+
+    <section id="finishCard" class="card hide">
+      <h2>Finalización</h2>
+      <p>¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?</p>
+      <label>Respuesta final<textarea id="finalAnswer"></textarea></label>
+      <label class="consent"><input id="followUp" type="checkbox"><span>Acepto ser contactada nuevamente para aclarar o ampliar aspectos de la entrevista.</span></label>
+      <label style="margin-top:12px">Material que enviará posteriormente<input id="materialCommitment" placeholder="Consigna, orientación de actividad, trabajo práctico u otro material"></label>
+      <div class="actions"><button id="finishBtn" class="btn primary">Finalizar y guardar en Drive</button></div>
+      <div id="finishStatus" class="status" role="status"></div>
+    </section>
+  </main>
+  <footer class="shell">Linda Angelica Lopez · Universidad Nacional de Quilmes · 2026</footer>
+
+  <script>
+    // Pegá aquí la URL de la implementación de Apps Script terminada en /exec.
+    const API_URL = "PEGAR_AQUI_LA_URL_DE_APPS_SCRIPT";
+
+    const QUESTIONS = [
+      {b:"Bloque 1 · Trayectoria y experiencia docente",q:"Para comenzar, ¿podrías contarme brevemente sobre tu trayectoria docente y sobre la asignatura o espacio curricular en la que incorporaste IA generativa?",p:["¿Qué contenidos enseñás?","¿A qué estudiantes está dirigida la asignatura?","¿En qué nivel y modalidad se desarrolla?","¿Qué características tiene habitualmente la propuesta de enseñanza?"]},
+      {b:"Bloque 1 · Trayectoria y experiencia docente",q:"¿Recordás la primera situación en la que decidiste incorporar, permitir o problematizar el uso de IA generativa en tu enseñanza? ¿Cómo fue esa experiencia?",p:["¿Qué motivó esa decisión?","¿Qué esperabas que ocurriera?","¿Cómo respondieron los estudiantes?","¿Qué ocurrió concretamente?"]},
+      {b:"Bloque 1 · Trayectoria y experiencia docente",q:"Pensá en una experiencia reciente que consideres especialmente representativa. ¿Podrías reconstruirla desde que la planificaste hasta que finalizó?",p:["¿Qué decisiones tomaste antes, durante y después de la actividad?","¿Qué hicieron los estudiantes?","¿Qué lugar ocupaste durante el proceso?","¿Qué situaciones no habías previsto?"]},
+      {b:"Bloque 2 · Propuesta de enseñanza y decisiones pedagógicas",q:"¿De qué manera intervino la IA generativa en esa propuesta de enseñanza?",p:["¿Fue objeto de análisis, medio de producción, apoyo para una tarea, parte de la evaluación u otra cosa?","¿En qué momentos consideraste conveniente incorporarla?","¿Hubo momentos o actividades en las que decidiste no incorporarla? ¿Por qué?"]},
+      {b:"Bloque 2 · Propuesta de enseñanza y decisiones pedagógicas",q:"¿Qué aprendizajes buscabas promover y cómo se relacionaba la incorporación de IA generativa con esos propósitos?",p:["¿Qué esperabas que los estudiantes hicieran por sí mismos?","¿Qué procesos de lectura, escritura, análisis, resolución o producción buscabas favorecer?","¿Qué conocimientos necesitaban para revisar las respuestas generadas?","¿Qué procesos procuraste preservar, fortalecer o revisar?"]},
+      {b:"Bloque 2 · Propuesta de enseñanza y decisiones pedagógicas",q:"¿Qué orientaciones ofreciste a los estudiantes para trabajar con IA generativa?",p:["¿Brindaste orientaciones sobre cómo formular las consultas?","¿Solicitaste revisar o contrastar las respuestas con otras fuentes?","¿Trabajaste sobre la declaración o citación del uso de IA?","¿Cómo acompañaste las dificultades que fueron apareciendo?"]},
+      {b:"Bloque 2 · Propuesta de enseñanza y decisiones pedagógicas",q:"¿La incorporación de IA generativa produjo cambios en las consignas, los materiales, la dinámica de la clase o la evaluación? ¿Cuáles?",p:["¿Qué aspectos modificaste?","¿Qué decidiste mantener sin cambios?","¿Qué decisiones volverías a tomar?","¿Qué cambiarías si desarrollaras nuevamente la propuesta?"]},
+      {b:"Bloque 2 · Propuesta de enseñanza y decisiones pedagógicas",q:"¿Cómo evaluaste —o cómo prevés evaluar— los procesos y producciones en los que intervino IA generativa?",p:["¿Qué evidencias considerás necesarias para reconocer el aprendizaje?","¿Cómo abordaste la autoría de las producciones?","¿Solicitaste que los estudiantes explicaran el proceso o las decisiones tomadas?","¿Consideraste necesario conocer de qué manera había intervenido la IA?","¿Cambiaron tus criterios o instrumentos de evaluación?"]},
+      {b:"Bloque 3 · Significados y racionalidades tecnopedagógicas",q:"A partir de estas experiencias, ¿qué significa para vos enseñar con la mediación de IA generativa?",p:["¿Esta experiencia modificó tu manera de comprender la enseñanza?","¿Produjo cambios en tu manera de entender el aprendizaje?","¿Modificó de algún modo tu papel como docente?","¿Qué lugar considerás que deben conservar los estudiantes?"]},
+      {b:"Bloque 3 · Significados y racionalidades tecnopedagógicas",q:"¿Qué criterios orientan tus decisiones acerca de cuándo, para qué y de qué manera integrar IA generativa?",p:["¿Qué criterios pedagógicos tienen mayor peso?","¿Qué lugar ocupa el tipo de conocimiento que se enseña?","¿Cómo influyen las características de la asignatura?","¿Cómo influyen las trayectorias y necesidades de los estudiantes?","¿Qué aspectos te llevan a decidir que la IA no debería incorporarse en determinada actividad?"]},
+      {b:"Bloque 4 · Tensiones y preocupaciones",q:"¿Qué tensiones, preocupaciones o dificultades surgieron en relación con esta experiencia?",p:["Confiabilidad de las respuestas.","Construcción y validación del conocimiento.","Errores, sesgos u omisiones.","Fuentes de información.","Autoría e integridad académica.","Privacidad y tratamiento de datos.","Desigualdades de acceso.","Dependencia de plataformas comerciales.","Autonomía y transformaciones del trabajo docente."]},
+      {b:"Bloque 4 · Tensiones y preocupaciones",q:"¿Cómo abordaste o resolviste esas tensiones?",p:["¿Tuviste que establecer acuerdos con los estudiantes?","¿Modificaste alguna orientación, consigna o criterio de evaluación?","¿Hubo situaciones que todavía no pudiste resolver?","¿Qué tensiones considerás que deberían abordarse institucionalmente?"]},
+      {b:"Bloque 5 · Condiciones institucionales",q:"¿Cómo influyeron las condiciones institucionales de la UNQ en tus decisiones sobre la incorporación de IA generativa?",p:["¿Encontraste orientaciones institucionales?","¿Participaste en espacios de formación o intercambio?","¿Conversaste con otros docentes sobre estas experiencias?","¿Qué condiciones institucionales facilitaron o limitaron el desarrollo de la propuesta?","¿Qué tipo de acompañamiento considerás necesario?"]},
+      {b:"Bloque 6 · Modalidades de enseñanza",q:"¿Qué relación encontrás entre la modalidad de cursada y la manera en que incorporaste IA generativa en la propuesta?",p:["¿La modalidad presencial, virtual o bimodal modificó las formas de orientar y acompañar a los estudiantes?","¿Cómo incidió en la comunicación y en la interacción?","¿Qué posibilidades o dificultades aparecieron en relación con los tiempos de trabajo?","¿Cómo influyó en el acceso a los sistemas de IA?","¿La modalidad modificó las posibilidades de seguir el proceso realizado por los estudiantes?","¿Incidió en las decisiones de evaluación o en las evidencias solicitadas para reconocer el aprendizaje?","Si tenés experiencia en más de una modalidad, ¿qué diferencias y continuidades observás?"]},
+      {b:"Bloque 7 · Particularidades del campo disciplinar",q:"¿Qué relación encontrás entre la incorporación de IA generativa y las características del campo disciplinar en el que enseñás?",p:["¿Considerás que las características de la disciplina influyeron en la manera de incorporar IA generativa? ¿De qué forma?","¿Qué saberes disciplinares necesitaron los estudiantes para trabajar con las respuestas o producciones generadas?","¿Qué posibilidades encontraste para la enseñanza de los contenidos de tu campo?","¿Qué dificultades, límites o precauciones identificaste?","¿Aparecieron cuestiones propias de la disciplina que fue necesario abordar?","¿Considerás que esta experiencia podría desarrollarse de la misma manera en otro campo disciplinar? ¿Por qué?"]},
+      {b:"Bloque 8 · Consignas y materiales de enseñanza",q:"En relación con la experiencia que relataste, ¿elaboraste o utilizaste alguna consigna, orientación de actividad, trabajo práctico u otro material vinculado con el uso de IA generativa?",p:["¿De qué tipo de material se trata?","¿Con qué propósito lo elaboraste o seleccionaste?","¿Qué orientaciones ofrecía a los estudiantes?","¿Qué esperabas que hicieran a partir de ese material?","¿Incluía criterios de evaluación o pautas relacionadas con el uso de IA generativa?","¿Realizaste modificaciones durante el desarrollo de la actividad?"]},
+      {b:"Bloque 8 · Consignas y materiales de enseñanza",q:"¿Podrías buscar ese material y enviármelo posteriormente para incorporarlo al análisis documental de la investigación?",p:["Una vez localizado: ¿qué aspectos del material considerás más importantes?","¿Qué decisiones vinculadas con la IA generativa pueden reconocerse en él?","¿Cómo se relaciona lo planteado en el documento con lo que ocurrió durante la actividad?","¿Realizaste ajustes o brindaste orientaciones adicionales que no hayan quedado registrados?","Si volvieras a utilizar el material, ¿qué modificarías? ¿Por qué?"]}
+    ];
+
+    const CAREERS = {
+      "Departamento de Ciencia y Tecnología": {
+        Presencial: [
+          "Arquitectura Naval","Ingeniería en Alimentos","Ingeniería en Automatización y Control Industrial",
+          "Licenciatura en Bioinformática","Licenciatura en Biotecnología","Licenciatura en Informática",
+          "Tecnicatura Universitaria en Biotecnología","Tecnicatura Universitaria en Programación Informática",
+          "Tecnicatura Universitaria en Química","Tecnicatura Universitaria en Tecnología Ambiental y Petroquímica"
+        ],
+        Virtual: ["Tecnicatura Universitaria en Seguridad e Higiene en el Trabajo"]
+      },
+      "Departamento de Ciencias Sociales": {
+        Presencial: [
+          "Licenciatura en Ciencias Sociales","Licenciatura en Comunicación Social",
+          "Licenciatura en Comunicación Social (CCC)","Licenciatura en Educación",
+          "Licenciatura en Educación (CCC)","Licenciatura en Enfermería","Licenciatura en Historia",
+          "Licenciatura en Historia (CCC)","Licenciatura en Terapia Ocupacional",
+          "Profesorado de Ciencias Sociales","Profesorado de Comunicación Social",
+          "Profesorado de Historia","Profesorado de Educación",
+          "Tecnicatura Universitaria en el Acompañamiento y Cuidado de la Persona Mayor"
+        ],
+        Virtual: [
+          "Licenciatura en Ciencias Sociales y Humanidades (CCC)","Licenciatura en Educación (CCC)",
+          "Licenciatura en Geografía (CCC)","Tecnicatura en Gestión de Medios Comunitarios"
+        ]
+      },
+      "Departamento de Economía y Administración": {
+        Presencial: [
+          "Licenciatura en Administración Hotelera","Licenciatura en Administración Hotelera (CCC)",
+          "Licenciatura en Comercio Internacional","Licenciatura en Economía del Desarrollo",
+          "Licenciatura en Gestión de Recursos Humanos y Relaciones Laborales",
+          "Tecnicatura Universitaria en Economía Social y Solidaria",
+          "Tecnicatura Universitaria en Gestión de Pequeñas y Medianas Empresas"
+        ],
+        Virtual: [
+          "Contador Público","Licenciatura en Turismo y Hotelería",
+          "Licenciatura en Turismo y Hotelería (CCC)","Licenciatura en Administración",
+          "Licenciatura en Administración (CCC)","Licenciatura en Gestión del Comercio Internacional",
+          "Licenciatura en Gestión del Comercio Internacional (CCC)",
+          "Tecnicatura Universitaria en Ciencias Empresariales"
+        ]
+      },
+      "Escuela de Artes": {
+        Presencial: [
+          "Licenciatura en Artes Digitales","Licenciatura en Composición con Medios Electroacústicos",
+          "Licenciatura en Música y Tecnología","Tecnicatura Universitaria en Creación Musical",
+          "Tecnicatura Universitaria en Producción Musical y Nuevas Tecnologías",
+          "Tecnicatura Universitaria en Producción Digital"
+        ],
+        Virtual: ["Licenciatura en Artes y Tecnologías (CCC)"]
+      }
+    };
+
+    const $=id=>document.getElementById(id);
+    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{}};
+    const localKey="entrevista-docente-unq-v2";
+
+    function callServer(name,payload){
+      if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(API_URL)){
+        return Promise.reject(new Error("Falta configurar la URL de Apps Script en el archivo index.html."));
+      }
+      const requestId=crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const frameName=`bridge_${requestId.replace(/[^a-zA-Z0-9_]/g,"")}`;
+      const frame=document.createElement("iframe");
+      frame.name=frameName;frame.className="hide";document.body.appendChild(frame);
+      const form=document.createElement("form");
+      form.method="POST";form.action=API_URL;form.target=frameName;form.className="hide";
+      const fields={action:name,requestId,payload:JSON.stringify(payload)};
+      Object.entries(fields).forEach(([key,value])=>{
+        const input=document.createElement(key==="payload"?"textarea":"input");
+        input.name=key;input.value=value;form.appendChild(input);
+      });
+      document.body.appendChild(form);form.submit();form.remove();
+      return waitForServer(requestId,payload.accessCode)
+        .finally(()=>setTimeout(()=>frame.remove(),1000));
+    }
+    function waitForServer(requestId,accessCode){
+      return new Promise((resolve,reject)=>{
+        const started=Date.now();
+        const check=()=>{
+          if(Date.now()-started>180000){
+            reject(new Error("El guardado está demorando demasiado. Revisá Drive antes de volver a intentarlo."));return;
+          }
+          const callback=`cb_${requestId.replace(/[^a-zA-Z0-9_]/g,"")}`;
+          const script=document.createElement("script");
+          let completed=false;
+          window[callback]=response=>{
+            completed=true;delete window[callback];script.remove();
+            if(!response.done){setTimeout(check,1000);return}
+            response.ok?resolve(response.result):reject(new Error(response.error||"No se pudo completar la solicitud."));
+          };
+          script.onerror=()=>{
+            if(completed)return;
+            delete window[callback];script.remove();setTimeout(check,1500);
+          };
+          const query=new URLSearchParams({action:"status",requestId,accessCode,callback,ts:String(Date.now())});
+          script.src=`${API_URL}?${query}`;document.body.appendChild(script);
+        };
+        setTimeout(check,700);
+      });
+    }
+    function collectSetup(){
+      const modality=$("modality").value;
+      const presenceType=$("presenceType").value;
+      return {
+        accessCode:$("accessCode").value.trim(),participantCode:$("participantCode").value.trim(),
+        participantName:$("participantName").value.trim(),department:$("department").value.trim(),
+        career:$("career").value.trim(),course:$("course").value.trim(),level:$("level").value,
+        modality:modality==="Presencial"&&presenceType?`${modality} · ${presenceType}`:modality,
+        presenceType,seniority:$("seniority").value.trim(),consent:$("consent").checked,
+        consentText:$("consentText").textContent.trim()
+      };
+    }
+    function setStatus(el,text,type=""){el.textContent=text;el.className=`status ${type}`.trim()}
+    function updateCareers(){
+      const department=$("department").value;
+      const modality=$("modality").value;
+      const careers=CAREERS[department]?.[modality]||[];
+      $("career").innerHTML=careers.length
+        ? '<option value="">Seleccionar carrera</option>'+careers.map(c=>`<option>${c}</option>`).join("")
+        : '<option value="">Seleccioná primero el departamento y la modalidad</option>';
+      $("career").disabled=!careers.length;
+    }
+    async function testMicrophone(){
+      const button=$("testMicBtn");
+      if(!navigator.mediaDevices?.getUserMedia){
+        setStatus($("micStatus"),"Este navegador no permite comprobar el micrófono. Podrás adjuntar un audio existente.","bad");return;
+      }
+      button.disabled=true;setStatus($("micStatus"),"Esperando autorización del navegador…");
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        stream.getTracks().forEach(track=>track.stop());
+        setStatus($("micStatus"),"Micrófono autorizado y listo para usar.","ok");
+        button.textContent="Micrófono autorizado";
+      }catch(error){
+        const blocked=error?.name==="NotAllowedError";
+        setStatus($("micStatus"),blocked
+          ?"El permiso está bloqueado. Habilitá el micrófono desde el ícono ubicado junto a la dirección web y recargá la página."
+          :"No se pudo acceder al micrófono. Verificá que esté conectado y habilitado en el dispositivo.","bad");
+        button.disabled=false;
+      }
+    }
+    function saveLocal(){
+      localStorage.setItem(localKey,JSON.stringify({index:state.index,sessionId:state.sessionId,saved:state.saved,accessCode:$("accessCode").value}));
+    }
+    function restoreLocal(){
+      try{const data=JSON.parse(localStorage.getItem(localKey)||"{}");state.index=data.index||0;state.sessionId=data.sessionId||"";state.saved=data.saved||{};$("accessCode").value=data.accessCode||""}catch{}
+    }
+    function render(){
+      const item=QUESTIONS[state.index];$("block").textContent=item.b;$("question").textContent=`${state.index+1}. ${item.q}`;
+      $("counter").textContent=`${state.index+1} de ${QUESTIONS.length}`;$("progressBar").style.width=`${(state.index+1)/QUESTIONS.length*100}%`;
+      $("probes").innerHTML=item.p.map(x=>`<li>${x}</li>`).join("");$("prevBtn").disabled=state.index===0;
+      $("nextBtn").textContent=state.index===QUESTIONS.length-1?"Ir al cierre":"Siguiente";$("nextBtn").disabled=!state.saved[state.index];
+      $("savedMark").classList.toggle("hide",!state.saved[state.index]);$("transcript").value="";$("notes").value="";
+      resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
+    }
+    async function startInterview(){
+      const payload=collectSetup();
+      if(!$("department").value||!$("modality").value||!$("career").value){
+        setStatus($("setupStatus"),"Seleccioná el departamento o escuela, la modalidad y la carrera.","bad");return;
+      }
+      if($("modality").value==="Presencial"&&!payload.presenceType){
+        setStatus($("setupStatus"),"Seleccioná el tipo de cursada presencial.","bad");return;
+      }
+      setStatus($("setupStatus"),"Creando la carpeta en Drive…");
+      $("startBtn").disabled=true;
+      try{
+        const result=await callServer("iniciarEntrevista",payload);state.sessionId=result.sessionId;
+        $("heroTitle").textContent=`Entrevista a ${payload.participantName}`;saveLocal();
+        $("setupCard").classList.add("hide");$("questionCard").classList.remove("hide");render();
+      }catch(error){setStatus($("setupStatus"),error.message,"bad");$("startBtn").disabled=false}
+    }
+    async function startRecording(){
+      if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){setStatus($("recordStatus"),"Este navegador no permite grabar. Podés adjuntar un audio existente.","bad");return}
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:true});state.chunks=[];
+        const preferred=["audio/webm;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+        state.recorder=new MediaRecorder(stream,preferred?{mimeType:preferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000});
+        state.recorder.ondataavailable=e=>e.data.size&&state.chunks.push(e.data);
+        state.recorder.onstop=()=>{state.audioBlob=new Blob(state.chunks,{type:state.recorder.mimeType||"audio/webm"});showAudio();stream.getTracks().forEach(t=>t.stop())};
+        state.recorder.start();$("recordBtn").disabled=true;$("stopBtn").disabled=false;setStatus($("recordStatus"),"Grabando…","rec");
+        if($("speechEnabled").checked)startSpeech();
+      }catch{setStatus($("recordStatus"),"No se pudo acceder al micrófono. Revisá el permiso del navegador.","bad")}
+    }
+    function stopRecording(){
+      if(state.recorder?.state==="recording")state.recorder.stop();if(state.recognition)try{state.recognition.stop()}catch{}
+      $("recordBtn").disabled=false;$("stopBtn").disabled=true;setStatus($("recordStatus"),"Audio listo para guardar.","ok");
+    }
+    function startSpeech(){
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setStatus($("recordStatus"),"La grabación continúa, pero este navegador no permite transcribir automáticamente.");return}
+      const rec=new SR();rec.lang="es-AR";rec.continuous=true;rec.interimResults=true;let finalText=$("transcript").value;
+      rec.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)finalText+=(finalText?" ":"")+e.results[i][0].transcript.trim();else interim+=e.results[i][0].transcript}$("transcript").value=finalText+(interim?" "+interim:"")};
+      rec.onerror=()=>setStatus($("recordStatus"),"La grabación continúa; la transcripción automática se interrumpió.");rec.start();state.recognition=rec;
+    }
+    function showAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl=URL.createObjectURL(state.audioBlob);$("preview").src=state.audioUrl;$("preview").classList.remove("hide")}
+    function resetAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl="";state.audioBlob=null;$("preview").classList.add("hide");$("audioFile").value=""}
+    function blobToBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(",")[1]);r.onerror=reject;r.readAsDataURL(blob)})}
+    async function saveAnswer(){
+      if(!state.audioBlob&&!$("transcript").value.trim()){setStatus($("saveStatus"),"Grabá o adjuntá un audio, o escribí la respuesta.","bad");return}
+      $("saveBtn").disabled=true;setStatus($("saveStatus"),"Guardando en Drive…");
+      try{
+        const item=QUESTIONS[state.index];const base64=state.audioBlob?await blobToBase64(state.audioBlob):"";
+        await callServer("guardarRespuesta",{accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:state.index+1,block:item.b,questionText:item.q,transcript:$("transcript").value.trim(),notes:$("notes").value.trim(),audioBase64:base64,mimeType:state.audioBlob?.type||""});
+        state.saved[state.index]=true;saveLocal();$("savedMark").classList.remove("hide");$("nextBtn").disabled=false;setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
+      }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
+    }
+    async function finish(){
+      $("finishBtn").disabled=true;setStatus($("finishStatus"),"Finalizando la entrevista…");
+      try{
+        if($("finalAnswer").value.trim()){
+          await callServer("guardarRespuesta",{accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:18,block:"Cierre",questionText:"¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?",transcript:$("finalAnswer").value.trim(),notes:"",audioBase64:"",mimeType:""});
+        }
+        const result=await callServer("finalizarEntrevista",{accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,acceptsFollowUp:$("followUp").checked,materialCommitment:$("materialCommitment").value.trim()});
+        setStatus($("finishStatus"),`Entrevista finalizada. Los archivos quedaron guardados en la carpeta “${result.folderName}”.`,"ok");
+        localStorage.removeItem(localKey);
+      }catch(error){setStatus($("finishStatus"),error.message,"bad");$("finishBtn").disabled=false}
+    }
+
+    $("testMicBtn").onclick=testMicrophone;
+    $("department").onchange=updateCareers;
+    $("modality").onchange=()=>{
+      const presencial=$("modality").value==="Presencial";
+      $("presenceTypeField").classList.toggle("hide",!presencial);
+      if(!presencial)$("presenceType").value="";
+      updateCareers();
+    };
+    $("startBtn").onclick=startInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
+    $("audioFile").onchange=e=>{const f=e.target.files[0];if(f){state.audioBlob=f;showAudio();setStatus($("recordStatus"),"Audio adjuntado y listo para guardar.","ok")}};
+    $("prevBtn").onclick=()=>{if(state.index>0){state.index--;saveLocal();render()}};
+    $("nextBtn").onclick=()=>{if(state.index<QUESTIONS.length-1){state.index++;saveLocal();render()}else{$("questionCard").classList.add("hide");$("finishCard").classList.remove("hide")}};
+    window.addEventListener("beforeunload",saveLocal);restoreLocal();
+  </script>
+</body>
+</html>
