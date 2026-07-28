@@ -173,7 +173,7 @@
         <span id="savedMark" class="saved hide">✓ Guardada</span>
       </div>
       <div id="saveStatus" class="status" role="status"></div>
-      <p class="counter">Podés avanzar sin responder y volver a esta pregunta cuando lo desees.</p>
+      <p class="counter">Podés avanzar sin responder. Si grabás, adjuntás o escribís una respuesta, deberás guardarla antes de continuar.</p>
       <div class="nav">
         <button id="prevBtn" class="btn">Anterior</button>
         <button id="nextBtn" class="btn">Siguiente</button>
@@ -464,7 +464,7 @@
         renderMaterialFiles();
         if(state.audioBlob)showAudio();
       }
-      if(state.saved[state.index])setStatus($("saveStatus"),"Esta respuesta ya fue guardada. Podés revisarla o reemplazarla.","ok");
+      if(state.saved[state.index])setStatus($("saveStatus"),"Esta pregunta ya fue respondida y guardada.","ok");
     }
     function renderMaterialFiles(){
       $("materialFileList").innerHTML=state.materialFiles.map(file=>`<li>${file.name}</li>`).join("");
@@ -477,9 +477,19 @@
         delete state.drafts[state.index];
       }
     }
+    function markCurrentUnsaved(){
+      if(state.saved[state.index]){
+        state.saved[state.index]=false;
+        $("savedMark").classList.add("hide");
+      }
+    }
     function canChangeQuestion(){
       if(state.recorder?.state==="recording"){setStatus($("recordStatus"),"Detené la grabación antes de cambiar de pregunta.","bad");return false}
       if(state.transcribing){setStatus($("recordStatus"),"Esperá a que finalice la transcripción antes de cambiar de pregunta.","bad");return false}
+      const hasUnsavedContent=Boolean(state.audioBlob||$("transcript").value.trim()||state.materialFiles.length);
+      if(hasUnsavedContent&&!state.saved[state.index]){
+        setStatus($("saveStatus"),"Guardá la respuesta en Drive antes de cambiar de pregunta.","bad");return false;
+      }
       return true;
     }
     async function startInterview(){
@@ -533,6 +543,7 @@
       if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){setStatus($("recordStatus"),"Este navegador no permite grabar. Podés adjuntar un audio existente.","bad");return}
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});state.chunks=[];
+        markCurrentUnsaved();
         const preferred=["audio/webm;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t))||"";
         state.recorder=new MediaRecorder(stream,preferred?{mimeType:preferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000});
         state.recorder.ondataavailable=e=>e.data.size&&state.chunks.push(e.data);
@@ -698,8 +709,9 @@
     };
     $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
     $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;
-    $("audioFile").onchange=async e=>{const f=e.target.files[0];if(f){state.audioBlob=f;showAudio();await transcribeAudioLocally()}};
-    $("materialFiles").onchange=e=>{state.materialFiles=Array.from(e.target.files||[]);renderMaterialFiles()};
+    $("transcript").oninput=markCurrentUnsaved;
+    $("audioFile").onchange=async e=>{const f=e.target.files[0];if(f){markCurrentUnsaved();state.audioBlob=f;showAudio();await transcribeAudioLocally()}};
+    $("materialFiles").onchange=e=>{markCurrentUnsaved();state.materialFiles=Array.from(e.target.files||[]);renderMaterialFiles()};
     $("prevBtn").onclick=()=>{if(state.index>0&&canChangeQuestion()){preserveCurrentDraft();state.index--;saveLocal();render()}};
     $("nextBtn").onclick=()=>{if(!canChangeQuestion())return;preserveCurrentDraft();if(state.index<QUESTIONS.length-1){state.index++;saveLocal();render()}else{$("questionCard").classList.add("hide");$("finishCard").classList.remove("hide")}};
     $("backToQuestionsBtn").onclick=()=>{
