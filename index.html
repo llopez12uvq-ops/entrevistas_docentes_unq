@@ -153,6 +153,7 @@
       <div class="actions">
         <button id="recordBtn" class="btn primary">Grabar audio</button>
         <button id="stopBtn" class="btn danger" disabled>Detener</button>
+        <button id="discardAudioBtn" class="btn danger hide">Descartar grabación</button>
       </div>
       <div id="recordStatus" class="status"></div>
       <div class="warning">La transcripción se generará automáticamente y puede demorar unos minutos. Al guardar la respuesta, el audio original y la transcripción se almacenarán en Drive.</div>
@@ -186,6 +187,7 @@
       <div class="actions">
         <button id="finishRecordBtn" class="btn primary">Grabar respuesta final</button>
         <button id="finishStopBtn" class="btn danger" disabled>Detener</button>
+        <button id="finishDiscardBtn" class="btn danger hide">Descartar grabación</button>
       </div>
       <div id="finishRecordStatus" class="status"></div>
       <audio id="finishPreview" class="hide" controls></audio>
@@ -277,7 +279,7 @@
     };
 
     const $=id=>document.getElementById(id);
-    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false};
+    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},savedBackups:{},materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false};
     const localKey="entrevista-docente-unq-v2";
     let whisperWorker=null;
     let whisperRequest=0;
@@ -479,6 +481,7 @@
     }
     function markCurrentUnsaved(){
       if(state.saved[state.index]){
+        state.savedBackups[state.index]={transcript:$("transcript").value};
         state.saved[state.index]=false;
         $("savedMark").classList.add("hide");
       }
@@ -565,6 +568,7 @@
           if(state.finalAudioUrl)URL.revokeObjectURL(state.finalAudioUrl);
           state.finalAudioUrl=URL.createObjectURL(state.finalAudioBlob);
           $("finishPreview").src=state.finalAudioUrl;$("finishPreview").classList.remove("hide");
+          $("finishDiscardBtn").classList.remove("hide");
           stream.getTracks().forEach(t=>t.stop());
           await transcribeFinalAudioLocally();
         };
@@ -575,6 +579,16 @@
     function stopFinalRecording(){
       if(state.finalRecorder?.state==="recording")state.finalRecorder.stop();
       $("finishRecordBtn").disabled=false;$("finishStopBtn").disabled=true;
+    }
+    function discardFinalAudio(){
+      if(state.finalTranscribing){setStatus($("finishRecordStatus"),"Esperá a que termine la transcripción antes de descartar la grabación.","bad");return}
+      if(!state.finalAudioBlob)return;
+      if(!confirm("¿Querés descartar la grabación final y su transcripción?"))return;
+      if(state.finalAudioUrl)URL.revokeObjectURL(state.finalAudioUrl);
+      state.finalAudioBlob=null;state.finalAudioUrl="";state.finalTranscriptionReady=false;
+      $("finishPreview").src="";$("finishPreview").classList.add("hide");
+      $("finishDiscardBtn").classList.add("hide");$("finalAnswer").value="";
+      setStatus($("finishRecordStatus"),"La grabación final y su transcripción fueron descartadas.","ok");
     }
     async function transcribeFinalAudioLocally(){
       state.finalTranscribing=true;state.finalTranscriptionReady=false;$("finishBtn").disabled=true;
@@ -614,8 +628,27 @@
       try{rec.start();state.recognition=rec;setStatus($("recordStatus"),"Grabando y transcribiendo automáticamente…","rec")}
       catch{setStatus($("recordStatus"),"La grabación continúa, pero no se pudo iniciar la transcripción automática.","bad")}
     }
-    function showAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl=URL.createObjectURL(state.audioBlob);$("preview").src=state.audioUrl;$("preview").classList.remove("hide")}
-    function resetAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl="";state.audioBlob=null;state.transcribing=false;state.transcriptionReady=false;$("preview").classList.add("hide");$("audioFile").value=""}
+    function showAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl=URL.createObjectURL(state.audioBlob);$("preview").src=state.audioUrl;$("preview").classList.remove("hide");$("discardAudioBtn").classList.remove("hide")}
+    function resetAudio(){if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);state.audioUrl="";state.audioBlob=null;state.transcribing=false;state.transcriptionReady=false;$("preview").classList.add("hide");$("discardAudioBtn").classList.add("hide");$("discardAudioBtn").disabled=false;$("audioFile").value=""}
+    function discardCurrentAudio(){
+      if(state.transcribing){setStatus($("recordStatus"),"Esperá a que termine la transcripción antes de descartar la grabación.","bad");return}
+      if(!state.audioBlob)return;
+      if(!confirm("¿Querés descartar la grabación y su transcripción?"))return;
+      resetAudio();
+      const backup=state.savedBackups[state.index];
+      if(backup){
+        $("transcript").value=backup.transcript||"";
+        state.saved[state.index]=true;
+        $("savedMark").classList.remove("hide");
+        delete state.savedBackups[state.index];
+        setStatus($("saveStatus"),"Se descartó la nueva grabación. Se mantiene la respuesta guardada anteriormente.","ok");
+      }else{
+        $("transcript").value="";
+        delete state.drafts[state.index];
+        setStatus($("saveStatus"),"La grabación y su transcripción fueron descartadas.","ok");
+      }
+      setStatus($("recordStatus"),"");
+    }
     function blobToBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(",")[1]);r.onerror=reject;r.readAsDataURL(blob)})}
     async function uploadMaterial(file,fileIndex,totalFiles){
       if(file.size>20*1024*1024)throw new Error(`El archivo “${file.name}” supera el máximo de 20 MB.`);
@@ -665,7 +698,7 @@
         for(let index=0;index<state.materialFiles.length;index++){
           await uploadMaterial(state.materialFiles[index],index,state.materialFiles.length);
         }
-        state.saved[state.index]=true;preserveCurrentDraft();saveLocal();$("savedMark").classList.remove("hide");setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
+        state.saved[state.index]=true;delete state.savedBackups[state.index];preserveCurrentDraft();saveLocal();$("savedMark").classList.remove("hide");setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
       }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
     }
     async function finish(){
@@ -707,8 +740,8 @@
       if(!presencial)$("presenceType").value="";
       updateCareers();
     };
-    $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
-    $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;
+    $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("discardAudioBtn").onclick=discardCurrentAudio;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
+    $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;$("finishDiscardBtn").onclick=discardFinalAudio;
     $("transcript").oninput=markCurrentUnsaved;
     $("audioFile").onchange=async e=>{const f=e.target.files[0];if(f){markCurrentUnsaved();state.audioBlob=f;showAudio();await transcribeAudioLocally()}};
     $("materialFiles").onchange=e=>{markCurrentUnsaved();state.materialFiles=Array.from(e.target.files||[]);renderMaterialFiles()};
