@@ -129,7 +129,11 @@
           </ol>
         </details>
       </div>
-      <div class="actions"><button id="startBtn" class="btn primary" disabled>Crear carpeta y comenzar</button></div>
+      <div class="actions">
+        <button id="startBtn" class="btn primary" disabled>Crear carpeta y comenzar</button>
+        <button id="resumeBtn" class="btn">Retomar entrevista</button>
+      </div>
+      <p class="counter">Para retomar una entrevista, solo necesitás completar el código de acceso y el código de entrevista.</p>
       <div id="setupStatus" class="status" role="status"></div>
     </section>
 
@@ -454,6 +458,7 @@
         renderMaterialFiles();
         if(state.audioBlob)showAudio();
       }
+      if(state.saved[state.index])setStatus($("saveStatus"),"Esta respuesta ya fue guardada. Podés revisarla o reemplazarla.","ok");
     }
     function renderMaterialFiles(){
       $("materialFileList").innerHTML=state.materialFiles.map(file=>`<li>${file.name}</li>`).join("");
@@ -482,10 +487,41 @@
       setStatus($("setupStatus"),"Creando la carpeta en Drive…");
       $("startBtn").disabled=true;
       try{
-        const result=await callServer("iniciarEntrevista",payload);state.sessionId=result.sessionId;
+        const result=await callServer("iniciarEntrevista",payload);
+        state.sessionId=result.sessionId;state.index=0;state.saved={};state.drafts={};state.materialFiles=[];
         $("heroTitle").textContent="Entrevista docente";saveLocal();
         $("setupCard").classList.add("hide");$("questionCard").classList.remove("hide");render();
       }catch(error){setStatus($("setupStatus"),error.message,"bad");$("startBtn").disabled=false}
+    }
+    function applyInterviewMetadata(metadata){
+      $("participantName").value=metadata.participantName||"";
+      $("department").value=metadata.department||"";
+      $("career").disabled=false;
+      $("course").value=metadata.course||"";
+      $("level").value=metadata.level||"";
+      $("seniority").value=metadata.seniority||"";
+      const modalityParts=String(metadata.modality||"").split(" · ");
+      $("modality").value=modalityParts[0]||"";
+      const presencial=$("modality").value==="Presencial";
+      $("presenceTypeField").classList.toggle("hide",!presencial);
+      $("presenceType").value=presencial?(modalityParts[1]||""):"";
+      updateCareers();
+      $("career").value=metadata.career||"";
+    }
+    async function resumeInterview(){
+      const accessCode=$("accessCode").value.trim();
+      const participantCode=$("participantCode").value.trim();
+      if(!accessCode||!participantCode){setStatus($("setupStatus"),"Completá el código de acceso y el código de entrevista.","bad");return}
+      $("resumeBtn").disabled=true;setStatus($("setupStatus"),"Buscando la entrevista guardada…");
+      try{
+        const result=await callServer("retomarEntrevista",{accessCode,participantCode});
+        state.sessionId=result.sessionId;state.index=result.nextIndex||0;state.saved=result.saved||{};state.drafts=result.drafts||{};state.materialFiles=[];
+        applyInterviewMetadata(result.metadata||{});
+        $("heroTitle").textContent="Entrevista docente";saveLocal();
+        $("setupCard").classList.add("hide");$("questionCard").classList.remove("hide");render();
+      }catch(error){
+        setStatus($("setupStatus"),error.message,"bad");$("resumeBtn").disabled=false;
+      }
     }
     async function startRecording(){
       if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){setStatus($("recordStatus"),"Este navegador no permite grabar. Podés adjuntar un audio existente.","bad");return}
@@ -654,7 +690,7 @@
       if(!presencial)$("presenceType").value="";
       updateCareers();
     };
-    $("startBtn").onclick=startInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
+    $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
     $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;
     $("audioFile").onchange=async e=>{const f=e.target.files[0];if(f){state.audioBlob=f;showAudio();await transcribeAudioLocally()}};
     $("materialFiles").onchange=e=>{state.materialFiles=Array.from(e.target.files||[]);renderMaterialFiles()};
@@ -667,5 +703,7 @@
     };
     window.addEventListener("beforeunload",saveLocal);restoreLocal();
   </script>
+</body>
+</html>
 </body>
 </html>
