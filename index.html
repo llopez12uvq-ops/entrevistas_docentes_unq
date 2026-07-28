@@ -391,7 +391,7 @@
             self.postMessage({id,type:"status",text:"Transcribiendo el audio…"});
             const output=await transcriber(audio,{
               language:"spanish",task:"transcribe",chunk_length_s:30,stride_length_s:5,
-              return_timestamps:"word"
+              return_timestamps:true
             });
             self.postMessage({id,type:"done",text:puntuarDesdePausas(output)});
           }catch(error){
