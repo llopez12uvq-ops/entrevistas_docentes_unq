@@ -32,6 +32,7 @@
     .mic-check p{margin:0;color:var(--muted);font-size:.91rem}
     .mic-check details{margin-top:14px;background:#fff}.mic-check details ol{margin:0;padding:0 38px 16px}.mic-check details li{margin:7px 0}
     .material-upload{margin:18px 0;padding:18px;border:1px solid #bfe4f4;border-radius:16px;background:#f5fcff}.material-upload h3{margin:0 0 6px;color:var(--navy)}.file-list{margin:10px 0 0;padding-left:22px;color:var(--muted)}
+    .resume-panel{margin:18px 0 28px;padding:18px;border:1px solid #bfe4f4;border-radius:16px;background:var(--sky)}.resume-panel p{margin:0;color:var(--muted)}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     label{display:grid;gap:7px;color:var(--muted);font-size:.88rem;font-weight:750}
     input,select,textarea{width:100%;padding:12px 13px;border:1px solid #cbdfe9;border-radius:12px;background:white;color:var(--ink);outline:none;transition:.18s ease}
@@ -68,6 +69,15 @@
       <div class="grid">
         <label>Código de acceso<input id="accessCode" type="password" autocomplete="off"></label>
         <label>Código de entrevista<input id="participantCode" placeholder="Ej.: E01" autocomplete="off"></label>
+      </div>
+      <div class="resume-panel">
+        <p>Si ya comenzaste la entrevista, solo necesitás completar los dos códigos anteriores.</p>
+        <div class="actions"><button id="resumeBtn" class="btn">Retomar entrevista</button></div>
+        <div id="resumeStatus" class="status" role="status"></div>
+      </div>
+
+      <h2>Para iniciar una nueva entrevista</h2>
+      <div class="grid">
         <label>Nombre de la persona entrevistada<input id="participantName" placeholder="Nombre y apellido" autocomplete="off"></label>
         <label>Departamento o Escuela
           <select id="department">
@@ -129,11 +139,7 @@
           </ol>
         </details>
       </div>
-      <div class="actions">
-        <button id="startBtn" class="btn primary" disabled>Crear carpeta y comenzar</button>
-        <button id="resumeBtn" class="btn">Retomar entrevista</button>
-      </div>
-      <p class="counter">Para retomar una entrevista, solo necesitás completar el código de acceso y el código de entrevista.</p>
+      <div class="actions"><button id="startBtn" class="btn primary" disabled>Crear carpeta y comenzar</button></div>
       <div id="setupStatus" class="status" role="status"></div>
     </section>
 
@@ -511,8 +517,8 @@
     async function resumeInterview(){
       const accessCode=$("accessCode").value.trim();
       const participantCode=$("participantCode").value.trim();
-      if(!accessCode||!participantCode){setStatus($("setupStatus"),"Completá el código de acceso y el código de entrevista.","bad");return}
-      $("resumeBtn").disabled=true;setStatus($("setupStatus"),"Buscando la entrevista guardada…");
+      if(!accessCode||!participantCode){setStatus($("resumeStatus"),"Completá el código de acceso y el código de entrevista.","bad");return}
+      $("resumeBtn").disabled=true;setStatus($("resumeStatus"),"Buscando la entrevista guardada…");
       try{
         const result=await callServer("retomarEntrevista",{accessCode,participantCode});
         state.sessionId=result.sessionId;state.index=result.nextIndex||0;state.saved=result.saved||{};state.drafts=result.drafts||{};state.materialFiles=[];
@@ -520,7 +526,7 @@
         $("heroTitle").textContent="Entrevista docente";saveLocal();
         $("setupCard").classList.add("hide");$("questionCard").classList.remove("hide");render();
       }catch(error){
-        setStatus($("setupStatus"),error.message,"bad");$("resumeBtn").disabled=false;
+        setStatus($("resumeStatus"),error.message,"bad");$("resumeBtn").disabled=false;
       }
     }
     async function startRecording(){
@@ -703,7 +709,5 @@
     };
     window.addEventListener("beforeunload",saveLocal);restoreLocal();
   </script>
-</body>
-</html>
 </body>
 </html>
