@@ -1,3 +1,5 @@
+igo.gs. Después, recargá la página con Ctrl + F5.
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -349,6 +351,32 @@
       const source=`
         import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm";
         let transcriber=null;
+        function capitalizarInicio(texto){
+          return texto.replace(/(^|[.!?]\\s+|\\n+)([a-záéíóúüñ])/g,(todo,inicio,letra)=>inicio+letra.toUpperCase());
+        }
+        function puntuarDesdePausas(output){
+          const chunks=Array.isArray(output.chunks)?output.chunks:[];
+          if(!chunks.length)return capitalizarInicio((output.text||"").trim()).replace(/([^.!?…])$/,"$1.");
+          let resultado="";
+          let finAnterior=null;
+          for(const chunk of chunks){
+            const palabra=String(chunk.text||"").trim();
+            if(!palabra)continue;
+            const inicio=Array.isArray(chunk.timestamp)?chunk.timestamp[0]:null;
+            const fin=Array.isArray(chunk.timestamp)?chunk.timestamp[1]:null;
+            const pausa=typeof inicio==="number"&&typeof finAnterior==="number"?inicio-finAnterior:0;
+            if(resultado){
+              if(pausa>=2.4&&!/[.!?…]$/.test(resultado.trim()))resultado=resultado.trimEnd()+".\\n\\n";
+              else if(pausa>=1.15&&!/[.!?…]$/.test(resultado.trim()))resultado=resultado.trimEnd()+". ";
+              else if(!/\\s$/.test(resultado))resultado+=" ";
+            }
+            resultado+=palabra;
+            if(typeof fin==="number")finAnterior=fin;
+          }
+          resultado=resultado.replace(/\\s+([,.;:!?])/g,"$1").replace(/[ \\t]+\\n/g,"\\n").trim();
+          if(resultado&&!/[.!?…]$/.test(resultado))resultado+=".";
+          return capitalizarInicio(resultado);
+        }
         self.onmessage=async event=>{
           const {id,audio}=event.data;
           try{
@@ -364,9 +392,10 @@
             }
             self.postMessage({id,type:"status",text:"Transcribiendo el audio…"});
             const output=await transcriber(audio,{
-              language:"spanish",task:"transcribe",chunk_length_s:30,stride_length_s:5
+              language:"spanish",task:"transcribe",chunk_length_s:30,stride_length_s:5,
+              return_timestamps:"word"
             });
-            self.postMessage({id,type:"done",text:(output.text||"").trim()});
+            self.postMessage({id,type:"done",text:puntuarDesdePausas(output)});
           }catch(error){
             self.postMessage({id,type:"error",text:error&&error.message?error.message:String(error)});
           }
