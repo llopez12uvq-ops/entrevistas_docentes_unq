@@ -50,8 +50,11 @@
     .status{min-height:26px;margin-top:9px;color:var(--muted);font-size:.92rem}.status.ok{color:var(--good);font-weight:700}.status.bad{color:var(--bad);font-weight:700}.status.rec{color:var(--bad);font-weight:800}
     audio{width:100%;margin:10px 0}.warning{padding:11px 13px;border-left:4px solid var(--warn);background:#fff7e7;color:#68470f;font-size:.88rem}
     .nav{display:flex;justify-content:space-between;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}.saved{display:inline-flex;align-items:center;gap:6px;color:var(--good);font-size:.9rem;font-weight:800}
+    .full{grid-column:1/-1}.teaching-intro{margin:4px 0 14px;color:var(--muted)}.teaching-spaces{display:grid;gap:14px}
+    .teaching-space{padding:18px;border:1px solid var(--line);border-radius:16px;background:#f8fcfe}.space-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.space-head h3{margin:0;color:var(--navy);font-size:1.03rem}.space-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.remove-space{padding:8px 11px;font-size:.82rem}
+    .helper{display:block;margin-top:7px;color:var(--muted);font-size:.84rem;line-height:1.45}.training-fieldset{margin:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fcfe}.training-fieldset legend{padding:0 7px;color:var(--navy);font-weight:800}
     footer{padding:26px 0 45px;text-align:center;color:var(--muted);font-size:.87rem}
-    @media(max-width:650px){.grid{grid-template-columns:1fr}.hero{border-radius:22px}.hero:after{opacity:.5}.question{font-size:1.43rem}.btn{flex-grow:1}.brand small{display:none}}
+    @media(max-width:650px){.grid,.space-grid{grid-template-columns:1fr}.full{grid-column:auto}.hero{border-radius:22px}.hero:after{opacity:.5}.question{font-size:1.43rem}.btn{flex-grow:1}.brand small{display:none}}
   </style>
 </head>
 <body>
@@ -78,45 +81,39 @@
 
       <h2>Para iniciar una nueva entrevista</h2>
       <div class="grid">
-        <label>Nombre de la persona entrevistada<input id="participantName" placeholder="Nombre y apellido" autocomplete="off"></label>
-        <label>Departamento o Escuela
-          <select id="department">
-            <option value="">Seleccionar</option>
-            <option>Departamento de Ciencia y Tecnología</option>
-            <option>Departamento de Ciencias Sociales</option>
-            <option>Departamento de Economía y Administración</option>
-            <option>Escuela de Artes</option>
-          </select>
-        </label>
-        <label>Modalidad
-          <select id="modality">
-            <option value="">Seleccionar</option>
-            <option>Presencial</option>
-            <option>Virtual</option>
-          </select>
-        </label>
-        <label id="presenceTypeField" class="hide">Tipo de cursada presencial
-          <select id="presenceType">
-            <option value="">Seleccionar</option>
-            <option>Sin campus</option>
-            <option>Con campus</option>
-            <option>Semi presencial</option>
-          </select>
-        </label>
-        <label>Carrera
-          <select id="career" disabled>
-            <option value="">Seleccioná primero el departamento y la modalidad</option>
-          </select>
-        </label>
-        <label>Asignatura o espacio curricular<input id="course" autocomplete="off"></label>
-        <label>Nivel
-          <select id="level">
+        <label>Nombre de la persona entrevistada<input id="participantName" name="participantName" placeholder="Nombre y apellido" autocomplete="name"></label>
+        <label>Antigüedad docente<input id="seniority" name="seniority" autocomplete="on"></label>
+        <label class="full">Máximo título universitario obtenido
+          <select id="highestDegree">
             <option value="">Seleccionar</option>
             <option>Pregrado</option>
             <option>Grado</option>
+            <option>Especialización</option>
+            <option>Maestría</option>
+            <option>Doctorado</option>
           </select>
+          <span class="helper">Seleccioná únicamente una carrera finalizada y cuyo título hayas obtenido.</span>
         </label>
-        <label>Antigüedad docente<input id="seniority" autocomplete="off"></label>
+        <fieldset class="training-fieldset full">
+          <legend>Otras certificaciones o formaciones de posgrado finalizadas</legend>
+          <label>Además del título universitario indicado, ¿finalizaste otras certificaciones o formaciones de posgrado?
+            <select id="otherPostgradCompleted">
+              <option value="">Seleccionar</option>
+              <option>Sí</option>
+              <option>No</option>
+            </select>
+          </label>
+          <label id="postgradDetailsField" class="hide" style="margin-top:14px">Indicá cuáles
+            <textarea id="postgradDetails" name="postgradDetails" autocomplete="on" placeholder="Escribí el nombre de la diplomatura, máster, curso u otra formación"></textarea>
+            <span class="helper">Podés incluir diplomaturas, diplomas de posgrado, másteres o títulos propios, cursos de posgrado u otras formaciones finalizadas.</span>
+          </label>
+        </fieldset>
+        <div class="full">
+          <h3 style="margin-bottom:4px">Espacios de enseñanza</h3>
+          <p class="teaching-intro">Agregá una entrada por cada asignatura o curso. Podés registrar distintos niveles, carreras y modalidades.</p>
+          <div id="teachingSpaces" class="teaching-spaces"></div>
+          <div class="actions"><button id="addTeachingSpaceBtn" class="btn" type="button">+ Agregar otra asignatura o curso</button></div>
+        </div>
       </div>
 
       <h2 style="margin-top:26px">Presentación y consentimiento</h2>
@@ -278,6 +275,71 @@
       }
     };
 
+    const POSTGRAD_CAREERS = [
+      {type:"Doctorado",name:"Doctorado en Transformación Digital, Comunicación y Educación",modes:["Virtual"]},
+      {type:"Doctorado",name:"Doctorado en Ciencias de la Enfermería",modes:["Presencial"]},
+      {type:"Doctorado",name:"Doctorado en Estudios Territoriales",modes:["Presencial","Virtual"]},
+      {type:"Doctorado",name:"Doctorado en Estudios del Conurbano",modes:["Presencial"]},
+      {type:"Doctorado",name:"Doctorado en Desarrollo Económico",modes:["Presencial"]},
+      {type:"Doctorado",name:"Doctorado en Ciencias Sociales y Humanas",modes:["Presencial"]},
+      {type:"Doctorado",name:"Doctorado en Ciencia y Tecnología",modes:["Presencial"]},
+
+      {type:"Maestría",name:"Maestría en Terapia Ocupacional",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Industrias Culturales: políticas y gestión",modes:["Presencial","Virtual"]},
+      {type:"Maestría",name:"Maestría en Historia Pública y Divulgación de la Historia",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Historia Intelectual",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Gobierno Local",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Filosofía",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Educación",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Desarrollo y Gestión del Turismo",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Desarrollo Territorial y Urbano",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Criminología",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Comunicación Digital Audiovisual",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Comercio y Negocios Internacionales",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Ciencias Sociales y Humanidades",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Ciencia, Tecnología y Sociedad",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Arte Sonoro",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Ambiente y Desarrollo Sustentable",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Biotecnología",modes:["Virtual"]},
+      {type:"Maestría",name:"Maestría en Bioinformática y Biología de Sistemas",modes:["Presencial"]},
+
+      {type:"Especialización",name:"Especialización en Terapia Ocupacional Comunitaria",modes:["Presencial"]},
+      {type:"Especialización",name:"Especialización en Nanotecnología Aplicada a la Salud",modes:["Presencial"]},
+      {type:"Especialización",name:"Especialización en Relaciones Internacionales y Política Exterior",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Gobierno Local",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Gestión del Desarrollo Territorial y Urbano",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Gestión de la Economía Social y Solidaria",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Docencia Universitaria",modes:["Presencial"]},
+      {type:"Especialización",name:"Especialización en Docencia en Entornos Virtuales",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Desarrollo y Gestión del Turismo",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Criminología",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Comunicación, Gestión y Producción Cultural de la Ciencia y la Tecnología",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Comunicación Digital Audiovisual",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Ciencias Sociales y Humanidades",modes:["Virtual"]},
+      {type:"Especialización",name:"Especialización en Ambiente y Desarrollo Sustentable",modes:["Virtual"]},
+
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Comunicación Estratégica y Gestión de Redes Sociales",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Comunicación Política",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Gestión Estratégica de las Personas en las Organizaciones",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Negocios Digitales",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Historia Pública y Divulgación Social de la Historia",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Géneros, Feminismos y Derechos Humanos",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Gestión Integral de Empresas Industriales y de Servicios",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Gestión del Ministerio Público, Sistema Adversarial y Política Criminal",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Gestión de la Calidad, Sostenibilidad y Accesibilidad en Turismo",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Finanzas para el Desarrollo",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Enseñanza de las Ciencias en Carreras Científico-Tecnológicas",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Enfoques, Experiencias y Aprendizajes en Economía Social y Solidaria (DiPESS)",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Planeamiento, Gestión y Evaluación de Proyectos y Políticas Educativas en Contextos Digitales",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Diseño Estratégico de Tecnologías para el Desarrollo Inclusivo Sustentable",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Dirección de Empresas Públicas",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Desarrollo de Proyectos Documentales",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Contabilidad Financiera",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Cibercrimen",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Cannabis, Enteógenos y Política de Drogas",modes:["Virtual"]},
+      {type:"Diploma de Posgrado",name:"Diploma de Posgrado en Biotecnología, Industria y Negocios",modes:["Virtual"]}
+    ];
+
     const $=id=>document.getElementById(id);
     const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},savedBackups:{},materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false};
     const localKey="entrevista-docente-unq-v2";
@@ -331,15 +393,179 @@
         setTimeout(check,700);
       });
     }
+    let teachingSpaceCounter=0;
+    function createTeachingSpace(values={}){
+      teachingSpaceCounter+=1;
+      const card=document.createElement("div");
+      card.className="teaching-space";
+      card.dataset.spaceId=String(teachingSpaceCounter);
+      card.innerHTML=`
+        <div class="space-head">
+          <h3>Asignatura o curso <span class="space-number"></span></h3>
+          <button type="button" class="btn danger remove-space">Eliminar</button>
+        </div>
+        <div class="space-grid">
+          <label>Departamento o Escuela
+            <select class="space-department">
+              <option value="">Seleccionar</option>
+              <option>Departamento de Ciencia y Tecnología</option>
+              <option>Departamento de Ciencias Sociales</option>
+              <option>Departamento de Economía y Administración</option>
+              <option>Escuela de Artes</option>
+            </select>
+          </label>
+          <label>Nivel
+            <select class="space-level">
+              <option value="">Seleccionar</option>
+              <option>Pregrado</option>
+              <option>Grado</option>
+              <option>Posgrado</option>
+            </select>
+          </label>
+          <label>Modalidad
+            <select class="space-modality">
+              <option value="">Seleccionar</option>
+              <option>Presencial</option>
+              <option>Virtual</option>
+            </select>
+          </label>
+          <label class="space-presence-field hide">Tipo de cursada presencial
+            <select class="space-presence">
+              <option value="">Seleccionar</option>
+              <option>Sin campus</option>
+              <option>Con campus</option>
+              <option>Semi presencial</option>
+            </select>
+          </label>
+          <label>Carrera
+            <select class="space-career" disabled>
+              <option value="">Seleccioná primero el nivel y la modalidad</option>
+            </select>
+          </label>
+          <label class="space-other-career-field hide">Otra carrera o curso de posgrado
+            <input class="space-other-career" name="otherCareer" autocomplete="on" placeholder="Escribí el nombre completo">
+          </label>
+          <label class="full">Asignatura, seminario o curso
+            <input class="space-course" name="course" autocomplete="on" placeholder="Escribí el nombre">
+          </label>
+        </div>`;
+      $("teachingSpaces").appendChild(card);
+      const department=card.querySelector(".space-department");
+      const level=card.querySelector(".space-level");
+      const modality=card.querySelector(".space-modality");
+      const presence=card.querySelector(".space-presence");
+      const career=card.querySelector(".space-career");
+      const otherCareer=card.querySelector(".space-other-career");
+      department.value=values.department||"";
+      level.value=values.level||"";
+      modality.value=values.modality||"";
+      presence.value=values.presenceType||"";
+      card.querySelector(".space-course").value=values.course||"";
+      department.onchange=()=>updateTeachingCareers(card,career.value);
+      level.onchange=()=>updateTeachingCareers(card,career.value);
+      modality.onchange=()=>{
+        const presencial=modality.value==="Presencial";
+        card.querySelector(".space-presence-field").classList.toggle("hide",!presencial);
+        if(!presencial)presence.value="";
+        updateTeachingCareers(card,career.value);
+      };
+      career.onchange=()=>{
+        const isOther=career.value==="__other__";
+        card.querySelector(".space-other-career-field").classList.toggle("hide",!isOther);
+        if(!isOther)otherCareer.value="";
+      };
+      card.querySelector(".remove-space").onclick=()=>{
+        card.remove();
+        renumberTeachingSpaces();
+      };
+      card.querySelector(".space-presence-field").classList.toggle("hide",modality.value!=="Presencial");
+      updateTeachingCareers(card,values.career||"");
+      if(values.career==="__other__"||values.otherCareer){
+        career.value="__other__";
+        otherCareer.value=values.otherCareer||"";
+        card.querySelector(".space-other-career-field").classList.remove("hide");
+      }
+      renumberTeachingSpaces();
+    }
+    function renumberTeachingSpaces(){
+      const cards=[...document.querySelectorAll(".teaching-space")];
+      cards.forEach((card,index)=>{
+        card.querySelector(".space-number").textContent=String(index+1);
+        card.querySelector(".remove-space").classList.toggle("hide",cards.length===1);
+      });
+    }
+    function appendOption(select,value,text=value){
+      const option=document.createElement("option");
+      option.value=value;option.textContent=text;select.appendChild(option);
+    }
+    function updateTeachingCareers(card,selected=""){
+      const department=card.querySelector(".space-department").value;
+      const level=card.querySelector(".space-level").value;
+      const modality=card.querySelector(".space-modality").value;
+      const select=card.querySelector(".space-career");
+      select.innerHTML="";
+      appendOption(select,"",level&&modality?"Seleccionar carrera":"Seleccioná primero el nivel y la modalidad");
+      if(!level||!modality){select.disabled=true;return}
+      if(level==="Posgrado"){
+        const available=POSTGRAD_CAREERS.filter(item=>item.modes.includes(modality));
+        available.forEach(item=>appendOption(select,item.name));
+        appendOption(select,"__other__","Otra carrera o curso de posgrado");
+      }else{
+        if(!department){
+          select.innerHTML="";
+          appendOption(select,"","Seleccioná primero el departamento o escuela");
+          select.disabled=true;return;
+        }
+        const all=CAREERS[department]?.[modality]||[];
+        const available=all.filter(name=>{
+          const isPregrade=/^(Tecnicatura|Técnicatura)/i.test(name);
+          return level==="Pregrado"?isPregrade:!isPregrade;
+        });
+        available.forEach(name=>appendOption(select,name));
+        appendOption(select,"__other__","Otra carrera");
+      }
+      select.disabled=false;
+      if(selected)select.value=selected;
+      select.onchange();
+    }
+    function collectTeachingSpaces(){
+      return [...document.querySelectorAll(".teaching-space")].map(card=>{
+        const department=card.querySelector(".space-department").value;
+        const level=card.querySelector(".space-level").value;
+        const modality=card.querySelector(".space-modality").value;
+        const presenceType=card.querySelector(".space-presence").value;
+        const careerValue=card.querySelector(".space-career").value;
+        const otherCareer=card.querySelector(".space-other-career").value.trim();
+        return {
+          department,level,modality,presenceType,
+          career:careerValue==="__other__"?otherCareer:careerValue,
+          course:card.querySelector(".space-course").value.trim()
+        };
+      });
+    }
+    function updatePostgradTrainingUI(){
+      const hasTraining=$("otherPostgradCompleted").value==="Sí";
+      $("postgradDetailsField").classList.toggle("hide",!hasTraining);
+      if(!hasTraining)$("postgradDetails").value="";
+    }
     function collectSetup(){
-      const modality=$("modality").value;
-      const presenceType=$("presenceType").value;
+      const spaces=collectTeachingSpaces();
+      const unique=value=>[...new Set(spaces.map(item=>item[value]).filter(Boolean))].join(", ");
+      const careers=spaces.map((item,index)=>`${index+1}. ${item.career}`).join(" | ");
+      const courses=spaces.map((item,index)=>{
+        const modality=item.modality==="Presencial"&&item.presenceType
+          ? `${item.modality} · ${item.presenceType}`
+          : item.modality;
+        return `${index+1}. ${item.course} — ${item.career} [${item.department}; ${item.level}; ${modality}]`;
+      }).join(" | ");
       return {
         accessCode:$("accessCode").value.trim(),participantCode:$("participantCode").value.trim(),
-        participantName:$("participantName").value.trim(),department:$("department").value.trim(),
-        career:$("career").value.trim(),course:$("course").value.trim(),level:$("level").value,
-        modality:modality==="Presencial"&&presenceType?`${modality} · ${presenceType}`:modality,
-        presenceType,seniority:$("seniority").value.trim(),consent:$("consent").checked,
+        participantName:$("participantName").value.trim(),department:unique("department"),
+        career:careers,course:courses,level:unique("level"),modality:unique("modality"),
+        presenceType:unique("presenceType"),seniority:$("seniority").value.trim(),consent:$("consent").checked,
+        highestDegree:$("highestDegree").value,
+        otherPostgradTraining:$("otherPostgradCompleted").value,
+        otherPostgradDetails:$("postgradDetails").value.trim(),
         consentText:$("consentText").textContent.trim()
       };
     }
@@ -484,15 +710,6 @@
         state.transcribing=false;$("saveBtn").disabled=false;
       }
     }
-    function updateCareers(){
-      const department=$("department").value;
-      const modality=$("modality").value;
-      const careers=CAREERS[department]?.[modality]||[];
-      $("career").innerHTML=careers.length
-        ? '<option value="">Seleccionar carrera</option>'+careers.map(c=>`<option>${c}</option>`).join("")
-        : '<option value="">Seleccioná primero el departamento y la modalidad</option>';
-      $("career").disabled=!careers.length;
-    }
     async function testMicrophone(){
       const button=$("testMicBtn");
       if(!navigator.mediaDevices?.getUserMedia){
@@ -567,11 +784,19 @@
     }
     async function startInterview(){
       const payload=collectSetup();
-      if(!$("department").value||!$("modality").value||!$("career").value){
-        setStatus($("setupStatus"),"Seleccioná el departamento o escuela, la modalidad y la carrera.","bad");return;
+      if(!payload.highestDegree){
+        setStatus($("setupStatus"),"Seleccioná el máximo título universitario obtenido.","bad");return;
       }
-      if($("modality").value==="Presencial"&&!payload.presenceType){
-        setStatus($("setupStatus"),"Seleccioná el tipo de cursada presencial.","bad");return;
+      if(!payload.otherPostgradTraining){
+        setStatus($("setupStatus"),"Indicá si realizaste otras certificaciones o formaciones de posgrado.","bad");return;
+      }
+      if(payload.otherPostgradTraining==="Sí"&&!payload.otherPostgradDetails){
+        setStatus($("setupStatus"),"Escribí la denominación de las otras formaciones de posgrado finalizadas.","bad");return;
+      }
+      const spaces=collectTeachingSpaces();
+      const incomplete=spaces.some(item=>!item.department||!item.level||!item.modality||!item.career||!item.course||(item.modality==="Presencial"&&!item.presenceType));
+      if(!spaces.length||incomplete){
+        setStatus($("setupStatus"),"Completá el departamento o escuela, el nivel, la modalidad, la carrera y el nombre de cada asignatura o curso. Para las propuestas presenciales, indicá también el tipo de cursada.","bad");return;
       }
       setStatus($("setupStatus"),"Creando la carpeta en Drive…");
       $("startBtn").disabled=true;
@@ -584,18 +809,11 @@
     }
     function applyInterviewMetadata(metadata){
       $("participantName").value=metadata.participantName||"";
-      $("department").value=metadata.department||"";
-      $("career").disabled=false;
-      $("course").value=metadata.course||"";
-      $("level").value=metadata.level||"";
       $("seniority").value=metadata.seniority||"";
-      const modalityParts=String(metadata.modality||"").split(" · ");
-      $("modality").value=modalityParts[0]||"";
-      const presencial=$("modality").value==="Presencial";
-      $("presenceTypeField").classList.toggle("hide",!presencial);
-      $("presenceType").value=presencial?(modalityParts[1]||""):"";
-      updateCareers();
-      $("career").value=metadata.career||"";
+      $("highestDegree").value=metadata.highestDegree||"";
+      $("otherPostgradCompleted").value=metadata.otherPostgradTraining||"";
+      $("postgradDetails").value=metadata.otherPostgradDetails||"";
+      updatePostgradTrainingUI();
     }
     async function resumeInterview(){
       const accessCode=$("accessCode").value.trim();
@@ -803,13 +1021,8 @@
       else setStatus($("setupStatus"),"");
     };
     $("testMicBtn").onclick=testMicrophone;
-    $("department").onchange=updateCareers;
-    $("modality").onchange=()=>{
-      const presencial=$("modality").value==="Presencial";
-      $("presenceTypeField").classList.toggle("hide",!presencial);
-      if(!presencial)$("presenceType").value="";
-      updateCareers();
-    };
+    $("addTeachingSpaceBtn").onclick=()=>createTeachingSpace();
+    $("otherPostgradCompleted").onchange=updatePostgradTrainingUI;
     $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("discardAudioBtn").onclick=discardCurrentAudio;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
     $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;$("finishDiscardBtn").onclick=discardFinalAudio;
     $("transcript").oninput=markCurrentUnsaved;
@@ -822,7 +1035,9 @@
       if(state.finalTranscribing){setStatus($("finishStatus"),"Esperá a que termine la transcripción final antes de volver.","bad");return}
       $("finishCard").classList.add("hide");$("questionCard").classList.remove("hide");render()
     };
-    window.addEventListener("beforeunload",saveLocal);restoreLocal();
+    window.addEventListener("beforeunload",saveLocal);
+    createTeachingSpace();
+    restoreLocal();
   </script>
 </body>
 </html>
