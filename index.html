@@ -57,6 +57,7 @@
     .helper{display:block;margin-top:7px;color:var(--muted);font-size:.84rem;line-height:1.45}.training-fieldset{margin:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fcfe}.training-fieldset legend{padding:0 7px;color:var(--navy);font-weight:800}
     .choice-list{display:grid;gap:10px;margin-top:12px}.choice{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-weight:650}.choice input{flex:0 0 auto;width:19px;height:19px;margin-top:2px;accent-color:var(--blue-dark)}
     .transcript-view{margin-top:22px}.transcript-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.answer-sheet{display:grid;gap:14px;margin-top:18px}.answer-item{padding:17px;border:1px solid var(--line);border-radius:14px;background:#f8fcfe;break-inside:avoid}.answer-item h3{margin:0 0 7px;color:var(--navy);font-size:1rem}.answer-item p{margin:7px 0;white-space:pre-wrap}.answer-meta{color:var(--muted);font-size:.8rem}
+    .saved-answer-box{margin:20px 0;padding:18px;border:1px solid #a9dbc7;border-left:5px solid var(--good);border-radius:14px;background:#f3fbf7}.saved-answer-box h2{margin:0 0 8px;font-size:1.14rem;color:#116b4a}.saved-answer-box p{margin:0;white-space:pre-wrap;color:var(--ink)}.saved-answer-box .helper{margin-top:12px;color:var(--good);font-weight:700}
     @media print{body{background:#fff}.no-print,header,.hero,footer,#setupCard,#questionCard,#finishCard{display:none!important}#transcriptCard{display:block!important;margin:0;padding:0;border:0;box-shadow:none}.shell{width:100%}.answer-item{background:#fff}}
     footer{padding:26px 0 45px;text-align:center;color:var(--muted);font-size:.87rem}
     @media(max-width:760px){.access-grid{grid-template-columns:1fr}}
@@ -82,16 +83,17 @@
           <input id="resumePin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="Entre 4 y 8 dígitos">
         </label>
       </div>
-      <div class="resume-panel">
+      <div id="resumePanel" class="resume-panel">
         <p>Completá los tres datos que te envió la investigadora. Si ya comenzaste, podés retomar la entrevista o consultar las respuestas guardadas.</p>
         <div class="actions">
           <button id="resumeBtn" class="btn">Retomar entrevista</button>
           <button id="viewTranscriptBtn" class="btn" type="button">Ver mis respuestas</button>
+          <button id="editDataBtn" class="btn" type="button">Actualizar datos iniciales</button>
         </div>
         <div id="resumeStatus" class="status" role="status"></div>
       </div>
 
-      <h2>Para iniciar una nueva entrevista</h2>
+      <h2 id="setupFormTitle">Para iniciar una nueva entrevista</h2>
       <div class="grid">
         <label>Nombre de la persona entrevistada<input id="participantName" name="participantName" placeholder="Nombre y apellido" autocomplete="name"></label>
         <label>Antigüedad docente<input id="seniority" name="seniority" autocomplete="on"></label>
@@ -135,7 +137,12 @@
           <div class="actions"><button id="addTeachingSpaceBtn" class="btn" type="button">+ Agregar otra asignatura o curso</button></div>
         </div>
       </div>
+      <div id="editDataActions" class="actions hide">
+        <button id="saveDataBtn" class="btn primary" type="button">Guardar cambios</button>
+        <button id="cancelDataBtn" class="btn" type="button">Cancelar</button>
+      </div>
 
+      <div id="newInterviewControls">
       <h2 style="margin-top:26px">Presentación y consentimiento</h2>
       <p>Gracias por participar. Esta entrevista forma parte de una investigación doctoral sobre la enseñanza mediada por inteligencia artificial generativa en la Universidad Nacional de Quilmes.</p>
       <p>Me interesa conocer tu experiencia y los sentidos que atribuís a las decisiones que tomás en tus propuestas de enseñanza. No hay respuestas correctas ni incorrectas. La información será tratada de manera confidencial y tu identidad será resguardada.</p>
@@ -157,6 +164,7 @@
         </details>
       </div>
       <div class="actions"><button id="startBtn" class="btn primary" disabled>Crear carpeta y comenzar</button></div>
+      </div>
       <div id="setupStatus" class="status" role="status"></div>
     </section>
 
@@ -166,6 +174,14 @@
       <div id="question" class="question"></div>
       <details open><summary>Posibles repreguntas</summary><ul id="probes"></ul></details>
 
+      <section id="savedAnswerBox" class="saved-answer-box hide" aria-live="polite">
+        <h2>Tu respuesta guardada</h2>
+        <p id="savedAnswerText"></p>
+        <span class="helper">Esta respuesta ya fue enviada y no tiene cambios pendientes.</span>
+        <div class="actions no-print"><button id="replaceAnswerBtn" class="btn" type="button">Ampliar respuesta</button></div>
+      </section>
+
+      <div id="responseEditor">
       <h2 style="margin-top:24px">Respuesta</h2>
       <div class="actions">
         <button id="recordBtn" class="btn primary">Grabar audio</button>
@@ -188,10 +204,12 @@
       <div class="actions">
         <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
         <label class="btn">Adjuntar un audio existente<input id="audioFile" class="hide" type="file" accept="audio/*"></label>
+        <button id="cancelReplacementBtn" class="btn danger hide" type="button">Cancelar ampliación</button>
         <span id="savedMark" class="saved hide">✓ Guardada</span>
       </div>
       <div id="saveStatus" class="status" role="status"></div>
-      <p class="counter">Podés avanzar sin responder. Si grabás, adjuntás o escribís una respuesta, deberás guardarla antes de continuar.</p>
+      </div>
+      <p id="responseHint" class="counter">Podés avanzar sin responder. Si grabás, adjuntás o escribís una respuesta, deberás guardarla antes de continuar.</p>
       <div class="nav">
         <button id="prevBtn" class="btn">Anterior</button>
         <button id="nextBtn" class="btn">Siguiente</button>
@@ -371,7 +389,7 @@
     ];
 
     const $=id=>document.getElementById(id);
-    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},savedBackups:{},materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false};
+    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},savedBackups:{},adding:false,materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false};
     const localKey="entrevista-docente-unq-v2";
     let whisperWorker=null;
     let whisperRequest=0;
@@ -785,7 +803,7 @@
       $("counter").textContent=`${state.index+1} de ${QUESTIONS.length}`;$("progressBar").style.width=`${(state.index+1)/QUESTIONS.length*100}%`;
       $("probes").innerHTML=item.p.map(x=>`<li>${x}</li>`).join("");$("prevBtn").disabled=state.index===0;
       $("nextBtn").textContent=state.index===QUESTIONS.length-1?"Ir al cierre":"Siguiente";$("nextBtn").disabled=false;
-      $("savedMark").classList.toggle("hide",!state.saved[state.index]);
+      $("savedMark").classList.toggle("hide",!state.saved[state.index]||state.adding);
       $("transcriptLabel").textContent=state.saved[state.index]?"Tu respuesta guardada":"Transcripción";
       $("transcript").value="";
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
@@ -800,7 +818,18 @@
         renderMaterialFiles();
         if(state.audioBlob)showAudio();
       }
-      if(state.saved[state.index])setStatus($("saveStatus"),"Esta pregunta ya fue respondida y guardada.","ok");
+      const isSaved=Boolean(state.saved[state.index]);
+      $("savedAnswerBox").classList.toggle("hide",!isSaved);
+      $("responseEditor").classList.toggle("hide",isSaved&&!state.adding);
+      $("cancelReplacementBtn").classList.toggle("hide",!state.adding);
+      $("savedAnswerText").textContent=isSaved
+        ? (draft?.transcript||"[Respuesta guardada sin transcripción textual]")
+        : "";
+      $("responseHint").textContent=state.adding
+        ?"Guardá o cancelá la ampliación antes de cambiar de pregunta."
+        :isSaved
+        ?"Podés continuar con la pregunta siguiente o volver a una anterior."
+        :"Podés avanzar sin responder. Si grabás, adjuntás o escribís una respuesta, deberás guardarla antes de continuar.";
     }
     function renderMaterialFiles(){
       $("materialFileList").innerHTML=state.materialFiles.map(file=>`<li>${file.name}</li>`).join("");
@@ -814,6 +843,7 @@
       }
     }
     function markCurrentUnsaved(){
+      if(state.adding)return;
       if(state.saved[state.index]){
         state.savedBackups[state.index]={transcript:$("transcript").value};
         state.saved[state.index]=false;
@@ -821,9 +851,22 @@
         $("transcriptLabel").textContent="Respuesta modificada sin guardar";
       }
     }
+    function startAnswerReplacement(){
+      state.adding=true;
+      render();resetAudio();$("transcript").value="";state.materialFiles=[];
+      $("transcriptLabel").textContent="Transcripción de la ampliación";
+      setStatus($("saveStatus"),"Grabá o escribí una ampliación. La respuesta anterior se conservará sin modificaciones.","");
+    }
+    function cancelAnswerReplacement(){
+      if(!state.adding)return;
+      state.adding=false;resetAudio();render();
+    }
     function canChangeQuestion(){
       if(state.recorder?.state==="recording"){setStatus($("recordStatus"),"Detené la grabación antes de cambiar de pregunta.","bad");return false}
       if(state.transcribing){setStatus($("recordStatus"),"Esperá a que finalice la transcripción antes de cambiar de pregunta.","bad");return false}
+      if(state.adding){
+        setStatus($("saveStatus"),"Guardá o cancelá la ampliación antes de cambiar de pregunta.","bad");return false;
+      }
       const hasUnsavedContent=Boolean(state.audioBlob||$("transcript").value.trim()||state.materialFiles.length);
       if(hasUnsavedContent&&!state.saved[state.index]){
         setStatus($("saveStatus"),"Guardá la respuesta en Drive antes de cambiar de pregunta.","bad");return false;
@@ -871,11 +914,93 @@
       if(metadata.otherPostgradTraining==="Sí"&&!savedTraining.some(value=>value!=="Sí"))$("otherPostgradChoice").checked=true;
       $("postgradDetails").value=metadata.otherPostgradDetails||"";
       updatePostgradTrainingUI();
-      const spaces=Array.isArray(metadata.teachingSpaces)?metadata.teachingSpaces:[];
-      if(spaces.length){
-        $("teachingSpaces").innerHTML="";
-        spaces.forEach(space=>createTeachingSpace(space));
+      let spaces=Array.isArray(metadata.teachingSpaces)?metadata.teachingSpaces:[];
+      if(!spaces.length){
+        const serialized=String(metadata.course||"").split(/\s+\|\s+/);
+        spaces=serialized.map(entry=>{
+          const match=entry.match(/^\d+\.\s*(.*?)\s+—\s+(.*?)\s+\[(.*?);\s*(.*?);\s*(.*?)\]$/);
+          if(!match)return null;
+          const modeParts=match[5].split(/\s+·\s+/);
+          return {course:match[1],career:match[2],department:match[3],level:match[4],modality:modeParts[0],presenceType:modeParts[1]||""};
+        }).filter(Boolean);
       }
+      if(!spaces.length&&metadata.course){
+        const career=String(metadata.career||"").replace(/^\d+\.\s*/,"").split(/\s+\|\s+/)[0];
+        spaces=[{
+          department:String(metadata.department||"").split(/,\s*/)[0],
+          level:String(metadata.level||"").split(/,\s*/)[0],
+          modality:String(metadata.modality||"").split(/,\s*/)[0],
+          presenceType:String(metadata.presenceType||"").split(/,\s*/)[0],
+          career,course:String(metadata.course||"").split(/\s+\|\s+/)[0]
+        }];
+      }
+      $("teachingSpaces").innerHTML="";
+      if(spaces.length){
+        spaces.forEach(space=>createTeachingSpace(space));
+      }else{
+        createTeachingSpace();
+      }
+    }
+    function interviewCredentials(){
+      return {
+        accessCode:$("accessCode").value.trim(),
+        participantCode:$("participantCode").value.trim(),
+        transcriptPin:$("resumePin").value.trim()
+      };
+    }
+    function validateInterviewCredentials(payload){
+      if(!payload.accessCode||!payload.participantCode){
+        setStatus($("resumeStatus"),"Completá el código de acceso y el código de entrevista.","bad");return false;
+      }
+      if(!/^\d{4,8}$/.test(payload.transcriptPin)){
+        setStatus($("resumeStatus"),"Ingresá el PIN que te envió la investigadora.","bad");return false;
+      }
+      return true;
+    }
+    async function editInitialData(){
+      const credentials=interviewCredentials();
+      if(!validateInterviewCredentials(credentials))return;
+      $("editDataBtn").disabled=true;setStatus($("resumeStatus"),"Recuperando los datos guardados…");
+      try{
+        const result=await callServer("retomarEntrevista",credentials);
+        state.sessionId=result.sessionId;state.index=result.nextIndex||0;state.saved=result.saved||{};state.drafts=result.drafts||{};
+        applyInterviewMetadata(result.metadata||{});
+        $("setupFormTitle").textContent="Actualizar datos iniciales";
+        $("resumePanel").classList.add("hide");$("newInterviewControls").classList.add("hide");
+        $("editDataActions").classList.remove("hide");
+        setStatus($("setupStatus"),"Revisá los datos y guardá los cambios.");
+        $("setupFormTitle").scrollIntoView({behavior:"smooth",block:"start"});
+      }catch(error){
+        setStatus($("resumeStatus"),error.message,"bad");
+      }finally{$("editDataBtn").disabled=false}
+    }
+    async function saveInitialData(){
+      const payload=collectSetup();
+      const spaces=collectTeachingSpaces();
+      const incomplete=spaces.some(item=>!item.department||!item.level||!item.modality||!item.career||!item.course||(item.modality==="Presencial"&&!item.presenceType));
+      if(!payload.participantName||!payload.highestDegree||!$("otherPostgradCompleted").value||!spaces.length||incomplete){
+        setStatus($("setupStatus"),"Completá los datos personales, la formación y todos los datos de cada espacio de enseñanza.","bad");return;
+      }
+      if($("otherPostgradCompleted").value==="Sí"&&!collectPostgradTraining().length){
+        setStatus($("setupStatus"),"Seleccioná al menos una de las formaciones de posgrado.","bad");return;
+      }
+      if($("otherPostgradChoice").checked&&!payload.otherPostgradDetails){
+        setStatus($("setupStatus"),"Indicá cuál es la otra formación de posgrado finalizada.","bad");return;
+      }
+      $("saveDataBtn").disabled=true;setStatus($("setupStatus"),"Actualizando los datos en Drive…");
+      try{
+        const result=await callServer("actualizarDatosEntrevista",Object.assign({},payload,{sessionId:state.sessionId}));
+        applyInterviewMetadata(result.metadata||payload);
+        setStatus($("setupStatus"),"Los datos iniciales fueron actualizados correctamente.","ok");
+        setTimeout(cancelDataEdit,700);
+      }catch(error){
+        setStatus($("setupStatus"),error.message,"bad");
+      }finally{$("saveDataBtn").disabled=false}
+    }
+    function cancelDataEdit(){
+      $("editDataActions").classList.add("hide");$("newInterviewControls").classList.remove("hide");
+      $("resumePanel").classList.remove("hide");$("setupFormTitle").textContent="Para iniciar una nueva entrevista";
+      $("setupCard").classList.add("hide");$("questionCard").classList.remove("hide");render();
     }
     async function resumeInterview(){
       const accessCode=$("accessCode").value.trim();
@@ -932,7 +1057,20 @@
       setStatus($("resumeStatus"),"Recuperando las respuestas guardadas…");
       try{
         const result=await callServer("consultarTranscripcion",payload);
-        const byNumber=new Map((result.records||[]).map(record=>[Number(record.questionNumber),record]));
+        const byNumber=new Map();
+        (result.records||[]).forEach(record=>{
+          const number=Number(record.questionNumber);
+          const previous=byNumber.get(number);
+          const text=record.isAddition
+            ? `Ampliación (${record.savedAt?new Date(record.savedAt).toLocaleString("es-AR"):""}):\n${record.transcript||"[Sin transcripción textual]"}`
+            : (record.transcript||"");
+          if(previous){
+            previous.transcript=`${previous.transcript}\n\n${text}`;
+            previous.savedAt=record.savedAt||previous.savedAt;
+          }else{
+            byNumber.set(number,Object.assign({},record,{transcript:text}));
+          }
+        });
         $("answerSheet").innerHTML="";
         QUESTIONS.forEach((question,index)=>{
           const record=byNumber.get(index+1);
@@ -1047,13 +1185,18 @@
       if(!state.audioBlob)return;
       if(!confirm("¿Querés descartar la grabación y su transcripción?"))return;
       resetAudio();
+      if(state.adding){
+        $("transcript").value="";
+        setStatus($("saveStatus"),"La grabación de la ampliación fue descartada. La respuesta original se mantiene.","ok");
+        setStatus($("recordStatus"),"");
+        return;
+      }
       const backup=state.savedBackups[state.index];
       if(backup){
-        $("transcript").value=backup.transcript||"";
         state.saved[state.index]=true;
-        $("savedMark").classList.remove("hide");
+        state.drafts[state.index]={transcript:backup.transcript||"",audioBlob:null,transcriptionReady:false,materialFiles:[]};
         delete state.savedBackups[state.index];
-        setStatus($("saveStatus"),"Se descartó la nueva grabación. Se mantiene la respuesta guardada anteriormente.","ok");
+        saveLocal();render();
       }else{
         $("transcript").value="";
         delete state.drafts[state.index];
@@ -1087,6 +1230,8 @@
       if(!state.audioBlob&&!$("transcript").value.trim()&&!state.materialFiles.length){setStatus($("saveStatus"),"Grabá o adjuntá un audio, escribí la respuesta o adjuntá un material.","bad");return}
       $("saveBtn").disabled=true;setStatus($("saveStatus"),"Guardando en Drive…");
       try{
+        const isAddition=state.adding;
+        const previousTranscript=state.drafts[state.index]?.transcript||"";
         const item=QUESTIONS[state.index];
         const payload={accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:state.index+1,block:item.b,questionText:item.q,transcript:$("transcript").value.trim(),notes:"",audioBase64:"",mimeType:state.audioBlob?.type||""};
         if(state.audioBlob){
@@ -1103,14 +1248,22 @@
             });
           }
           setStatus($("saveStatus"),"Reconstruyendo y guardando el audio en Drive…");
-          await callServer("guardarRespuestaConFragmentos",Object.assign({},payload,{uploadId,totalChunks}));
+          await callServer(isAddition?"guardarAmpliacionConFragmentos":"guardarRespuestaConFragmentos",Object.assign({},payload,{uploadId,totalChunks}));
         }else{
-          await callServer("guardarRespuesta",payload);
+          await callServer(isAddition?"guardarAmpliacion":"guardarRespuesta",payload);
         }
-        for(let index=0;index<state.materialFiles.length;index++){
+        for(let index=0;index<state.materialFiles.length&&!isAddition;index++){
           await uploadMaterial(state.materialFiles[index],index,state.materialFiles.length);
         }
-        state.saved[state.index]=true;delete state.savedBackups[state.index];preserveCurrentDraft();saveLocal();$("savedMark").classList.remove("hide");$("transcriptLabel").textContent="Tu respuesta guardada";setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
+        if(isAddition){
+          const stamp=new Date().toLocaleString("es-AR");
+          const addition=payload.transcript||"[Ampliación guardada sin transcripción textual]";
+          state.drafts[state.index]={transcript:`${previousTranscript}\n\nAmpliación (${stamp}):\n${addition}`.trim(),audioBlob:null,transcriptionReady:false,materialFiles:[]};
+          state.adding=false;
+        }else{
+          preserveCurrentDraft();
+        }
+        state.saved[state.index]=true;delete state.savedBackups[state.index];saveLocal();render();
       }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
     }
     async function finish(){
@@ -1150,6 +1303,8 @@
     document.querySelectorAll("#postgradChoices input").forEach(input=>input.onchange=updatePostgradTrainingUI);
     $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("discardAudioBtn").onclick=discardCurrentAudio;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
     $("viewTranscriptBtn").onclick=viewTranscript;
+    $("editDataBtn").onclick=editInitialData;$("saveDataBtn").onclick=saveInitialData;$("cancelDataBtn").onclick=cancelDataEdit;
+    $("replaceAnswerBtn").onclick=startAnswerReplacement;$("cancelReplacementBtn").onclick=cancelAnswerReplacement;
     $("printTranscriptBtn").onclick=()=>window.print();$("closeTranscriptBtn").onclick=closeTranscript;
     $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;$("finishDiscardBtn").onclick=discardFinalAudio;
     $("transcript").oninput=markCurrentUnsaved;
