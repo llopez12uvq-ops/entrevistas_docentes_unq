@@ -35,7 +35,7 @@
     .mic-check details{margin-top:14px;background:#fff}.mic-check details ol{margin:0;padding:0 38px 16px}.mic-check details li{margin:7px 0}
     .material-upload{margin:18px 0;padding:18px;border:1px solid #bfe4f4;border-radius:16px;background:#f5fcff}.material-upload h3{margin:0 0 6px;color:var(--navy)}.file-list{margin:10px 0 0;padding-left:22px;color:var(--muted)}
     .resume-panel{margin:18px 0 28px;padding:18px;border:1px solid #bfe4f4;border-radius:16px;background:var(--sky)}.resume-panel p{margin:0;color:var(--muted)}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.access-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
     label{display:grid;gap:7px;color:var(--muted);font-size:.88rem;font-weight:750}
     input,select,textarea{width:100%;padding:12px 13px;border:1px solid #cbdfe9;border-radius:12px;background:white;color:var(--ink);outline:none;transition:.18s ease}
     input[readonly]{background:#f1f7fa;color:var(--navy);cursor:not-allowed}
@@ -59,6 +59,7 @@
     .transcript-view{margin-top:22px}.transcript-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.answer-sheet{display:grid;gap:14px;margin-top:18px}.answer-item{padding:17px;border:1px solid var(--line);border-radius:14px;background:#f8fcfe;break-inside:avoid}.answer-item h3{margin:0 0 7px;color:var(--navy);font-size:1rem}.answer-item p{margin:7px 0;white-space:pre-wrap}.answer-meta{color:var(--muted);font-size:.8rem}
     @media print{body{background:#fff}.no-print,header,.hero,footer,#setupCard,#questionCard,#finishCard{display:none!important}#transcriptCard{display:block!important;margin:0;padding:0;border:0;box-shadow:none}.shell{width:100%}.answer-item{background:#fff}}
     footer{padding:26px 0 45px;text-align:center;color:var(--muted);font-size:.87rem}
+    @media(max-width:760px){.access-grid{grid-template-columns:1fr}}
     @media(max-width:650px){.grid,.space-grid{grid-template-columns:1fr}.full{grid-column:auto}.hero{padding:25px 20px;border-radius:22px}.hero:after{opacity:.5}.card{padding:21px 17px}.question{font-size:1.35rem}.btn{flex-grow:1;white-space:normal}.brand small{display:none}.space-head{align-items:flex-start}.counter{white-space:normal}.nav{flex-wrap:wrap}}
   </style>
 </head>
@@ -74,18 +75,17 @@
 
     <section id="setupCard" class="card">
       <h2>Datos de la entrevista</h2>
-      <div class="grid">
+      <div class="grid access-grid">
         <label>Código de acceso<input id="accessCode" type="password" autocomplete="off"></label>
-        <label>Código individual de entrevista<input id="participantCode" placeholder="Ej.: E01-NOMBRE-K9P2" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
-      </div>
-      <div class="resume-panel">
-        <p>Si ya comenzaste la entrevista, completá el código de acceso, el código individual y el PIN que te envió la investigadora.</p>
-        <div class="actions"><button id="resumeBtn" class="btn">Retomar entrevista</button></div>
-        <label style="margin-top:16px">PIN personal
+        <label>Código individual de entrevista<input id="participantCode" placeholder="Ej.: E01" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+        <label>PIN personal
           <input id="resumePin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="Entre 4 y 8 dígitos">
         </label>
-        <p class="helper">Usá el PIN que recibiste junto con el código individual. Se solicita para retomar la entrevista y para consultar las respuestas.</p>
+      </div>
+      <div class="resume-panel">
+        <p>Completá los tres datos que te envió la investigadora. Si ya comenzaste, podés retomar la entrevista o consultar las respuestas guardadas.</p>
         <div class="actions">
+          <button id="resumeBtn" class="btn">Retomar entrevista</button>
           <button id="viewTranscriptBtn" class="btn" type="button">Ver mis respuestas</button>
         </div>
         <div id="resumeStatus" class="status" role="status"></div>
@@ -105,10 +105,6 @@
             <option>Doctorado</option>
           </select>
           <span class="helper">Seleccioná únicamente una carrera finalizada y cuyo título hayas obtenido.</span>
-        </label>
-        <label class="full">PIN personal
-          <input id="transcriptPin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="8" autocomplete="new-password" placeholder="Ingresá el PIN recibido">
-          <span class="helper">Ingresá el PIN que te envió la investigadora. Lo necesitarás para retomar la entrevista y para consultar tus respuestas.</span>
         </label>
         <fieldset class="training-fieldset full">
           <legend>Otras certificaciones o formaciones de posgrado finalizadas</legend>
@@ -179,7 +175,7 @@
       <div id="recordStatus" class="status"></div>
       <div class="warning">La transcripción se generará automáticamente y puede demorar unos minutos. Al guardar la respuesta, el audio original y la transcripción se almacenarán en Drive.</div>
       <audio id="preview" class="hide" controls></audio>
-      <label>Transcripción<textarea id="transcript" placeholder="Podés corregir aquí la transcripción automática o escribir notas sobre la respuesta."></textarea></label>
+      <label><span id="transcriptLabel">Transcripción</span><textarea id="transcript" placeholder="Podés corregir aquí la transcripción automática o escribir notas sobre la respuesta."></textarea></label>
       <div id="materialUpload" class="material-upload hide">
         <h3>Adjuntar materiales de enseñanza</h3>
         <p>Podés seleccionar uno o varios archivos. Verificá previamente que no contengan información que permita identificar a estudiantes.</p>
@@ -614,7 +610,7 @@
         otherPostgradTraining:collectPostgradTraining().join(" | "),
         otherPostgradDetails:$("postgradDetails").value.trim(),
         teachingSpaces:spaces,
-        transcriptPin:$("transcriptPin").value.trim(),
+        transcriptPin:$("resumePin").value.trim(),
         consentText:$("consentText").textContent.trim()
       };
     }
@@ -789,7 +785,9 @@
       $("counter").textContent=`${state.index+1} de ${QUESTIONS.length}`;$("progressBar").style.width=`${(state.index+1)/QUESTIONS.length*100}%`;
       $("probes").innerHTML=item.p.map(x=>`<li>${x}</li>`).join("");$("prevBtn").disabled=state.index===0;
       $("nextBtn").textContent=state.index===QUESTIONS.length-1?"Ir al cierre":"Siguiente";$("nextBtn").disabled=false;
-      $("savedMark").classList.toggle("hide",!state.saved[state.index]);$("transcript").value="";
+      $("savedMark").classList.toggle("hide",!state.saved[state.index]);
+      $("transcriptLabel").textContent=state.saved[state.index]?"Tu respuesta guardada":"Transcripción";
+      $("transcript").value="";
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
       state.materialFiles=[];$("materialFiles").value="";$("materialFileList").innerHTML="";
       $("materialUpload").classList.toggle("hide",state.index!==16);
@@ -820,6 +818,7 @@
         state.savedBackups[state.index]={transcript:$("transcript").value};
         state.saved[state.index]=false;
         $("savedMark").classList.add("hide");
+        $("transcriptLabel").textContent="Respuesta modificada sin guardar";
       }
     }
     function canChangeQuestion(){
@@ -837,7 +836,7 @@
         setStatus($("setupStatus"),"Seleccioná el máximo título universitario obtenido.","bad");return;
       }
       if(!/^\d{4,8}$/.test(payload.transcriptPin)){
-        setStatus($("setupStatus"),"Elegí un PIN personal de entre 4 y 8 dígitos.","bad");return;
+        setStatus($("setupStatus"),"Ingresá el PIN que te envió la investigadora.","bad");return;
       }
       if(!$("otherPostgradCompleted").value){
         setStatus($("setupStatus"),"Indicá si finalizaste otras certificaciones o formaciones de posgrado.","bad");return;
@@ -1111,7 +1110,7 @@
         for(let index=0;index<state.materialFiles.length;index++){
           await uploadMaterial(state.materialFiles[index],index,state.materialFiles.length);
         }
-        state.saved[state.index]=true;delete state.savedBackups[state.index];preserveCurrentDraft();saveLocal();$("savedMark").classList.remove("hide");setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
+        state.saved[state.index]=true;delete state.savedBackups[state.index];preserveCurrentDraft();saveLocal();$("savedMark").classList.remove("hide");$("transcriptLabel").textContent="Tu respuesta guardada";setStatus($("saveStatus"),"Respuesta guardada correctamente en Drive.","ok");
       }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
     }
     async function finish(){
