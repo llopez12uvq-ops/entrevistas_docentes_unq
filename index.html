@@ -57,9 +57,10 @@
     .helper{display:block;margin-top:7px;color:var(--muted);font-size:.84rem;line-height:1.45}.training-fieldset{margin:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fcfe}.training-fieldset legend{padding:0 7px;color:var(--navy);font-weight:800}
     .choice-list{display:grid;gap:10px;margin-top:12px}.choice{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-weight:650}.choice input{flex:0 0 auto;width:19px;height:19px;margin-top:2px;accent-color:var(--blue-dark)}
     .transcript-view{margin-top:22px}.transcript-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.answer-sheet{display:grid;gap:14px;margin-top:18px}.answer-item{border:1px solid var(--line);border-radius:14px;background:#f8fcfe;break-inside:avoid;overflow:hidden}.answer-item>summary{display:flex;align-items:center;gap:12px;padding:15px 17px;color:var(--navy)}.answer-item>summary strong{flex:1}.answer-item>p,.answer-item>.answer-meta{margin:0;padding:0 17px 15px;white-space:pre-wrap}.answer-meta{color:var(--muted);font-size:.8rem}
+    details.accordion>summary,.saved-answer-box>summary,.answer-item>summary,.question-map>summary{list-style:none}.saved-answer-box>summary::-webkit-details-marker,.answer-item>summary::-webkit-details-marker,.question-map>summary::-webkit-details-marker{display:none}.accordion-arrow{display:inline-grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:rgba(0,103,165,.1);color:var(--blue-dark);font-size:.8rem;font-weight:900}.accordion-arrow:before{content:"▶"}.saved-answer-box[open] .accordion-arrow:before,.answer-item[open] .accordion-arrow:before,.question-map[open] .accordion-arrow:before{content:"▼"}.when-open{display:none}.saved-answer-box[open] .when-closed{display:none}.saved-answer-box[open] .when-open{display:inline}
     .saved-answer-box{margin:20px 0;border:1px solid #a9dbc7;border-left:5px solid var(--good);border-radius:14px;background:#f3fbf7;overflow:hidden}.saved-answer-box>summary{display:flex;align-items:center;gap:9px;padding:16px 18px;color:#116b4a;font-size:1.05rem}.saved-answer-content{padding:0 18px 18px}.saved-answer-box p{margin:0;white-space:pre-wrap;color:var(--ink)}.saved-answer-box .helper{margin-top:12px;color:var(--good);font-weight:700}.answer-status{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:5px 9px;border-radius:999px;font-size:.76rem;font-weight:900}.answer-status.done{background:#dff5e9;color:#116b4a}.answer-status.pending{background:#edf3f6;color:#617583}.answer-status.followup{background:#fff0bd;color:#76520a}.question-state{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.question-state .question{flex:1}.edit-transcript{margin-top:16px;padding-top:16px;border-top:1px solid #cfe7dc}
     .researcher-access{margin-left:auto}.greeting{margin:0 0 18px;padding:15px 17px;border-left:5px solid var(--blue);border-radius:12px;background:var(--sky);white-space:pre-wrap}.thread{display:grid;gap:12px;margin:18px 0}.thread-item{padding:15px;border:1px solid #bfe4f4;border-radius:14px;background:#f3fbff}.thread-item h3{margin:0 0 6px;color:var(--blue-dark);font-size:1rem}.thread-item p{margin:0;white-space:pre-wrap}.requires-response{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:99px;background:#fff2c9;color:#76520a;font-size:.78rem;font-weight:800}.admin-panel{border-top:8px solid var(--navy)}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.admin-section{margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:16px;background:#f8fcfe}.admin-section h3{margin-top:0;color:var(--navy)}.admin-list{max-height:220px;overflow:auto}.admin-preview{max-height:360px;overflow:auto;white-space:pre-wrap}.question-audio{margin:4px 0 18px}
-    .question-map{margin:16px 0 4px}.question-map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;padding:0 14px 14px}.question-jump{border:1px solid var(--line);border-radius:10px;padding:8px 6px;background:#fff;color:var(--muted);font-weight:850;cursor:pointer}.question-jump.done{border-color:#a9dbc7;background:#e9f8f0;color:#116b4a}.question-jump.followup{border-color:#efd47d;background:#fff5cf;color:#76520a}.question-jump.current{box-shadow:0 0 0 3px rgba(28,171,226,.18);border-color:var(--blue)}
+    .question-map{margin:16px 0 4px}.question-map>summary{display:flex;align-items:center;gap:9px}.question-map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;padding:0 14px 14px}.question-jump{border:1px solid var(--line);border-radius:10px;padding:8px 6px;background:#fff;color:var(--muted);font-weight:850;cursor:pointer}.question-jump.done{border-color:#a9dbc7;background:#e9f8f0;color:#116b4a}.question-jump.followup{border-color:#efd47d;background:#fff5cf;color:#76520a}.question-jump.current{box-shadow:0 0 0 3px rgba(28,171,226,.18);border-color:var(--blue)}
     @media print{body{background:#fff}.no-print,header,.hero,footer,#setupCard,#questionCard,#finishCard{display:none!important}#transcriptCard{display:block!important;margin:0;padding:0;border:0;box-shadow:none}.shell{width:100%}.answer-item{background:#fff}}
     footer{padding:26px 0 45px;text-align:center;color:var(--muted);font-size:.87rem}
     @media(max-width:760px){.access-grid{grid-template-columns:1fr}}
@@ -173,7 +174,7 @@
     <section id="questionCard" class="card hide">
       <div id="personalGreeting" class="greeting hide"></div>
       <div class="question-top"><div class="progress"><span id="progressBar"></span></div><div id="counter" class="counter"></div></div>
-      <details class="question-map"><summary>Estado de las preguntas</summary><div id="questionMap" class="question-map-grid"></div></details>
+      <details class="question-map"><summary><span class="accordion-arrow" aria-hidden="true"></span><span>Estado de las preguntas</span></summary><div id="questionMap" class="question-map-grid"></div></details>
       <div id="block" class="block"></div>
       <div class="question-state"><div id="question" class="question"></div><span id="currentQuestionStatus" class="answer-status pending">○ Pendiente</span></div>
       <div id="questionAudioBox" class="question-audio hide"><button id="listenQuestionBtn" class="btn" type="button">▶ Escuchar pregunta</button><audio id="questionAudioPlayer" class="hide" controls></audio><div id="questionAudioStatus" class="status"></div></div>
@@ -181,7 +182,7 @@
       <section id="interactionThread" class="thread hide" aria-live="polite"></section>
 
       <details id="savedAnswerBox" class="saved-answer-box hide" aria-live="polite">
-        <summary><span>✓ Tu respuesta guardada</span><span id="savedAnswerStatus" class="answer-status done">Respondida</span></summary>
+        <summary><span class="accordion-arrow" aria-hidden="true"></span><span class="when-closed">Ver tu respuesta guardada</span><span class="when-open">Ocultar tu respuesta guardada</span><span id="savedAnswerStatus" class="answer-status done">Respondida</span></summary>
         <div class="saved-answer-content">
           <p id="savedAnswerText"></p>
           <span class="helper">El audio original permanece guardado. Podés ampliar lo dicho o corregir errores de la transcripción.</span>
@@ -960,6 +961,7 @@
       $("savedAnswerBox").classList.toggle("hide",!isSaved);
       $("responseEditor").classList.toggle("hide",isSaved&&!state.adding);
       $("cancelReplacementBtn").classList.toggle("hide",!state.adding);
+      $("saveBtn").textContent=state.adding?"Guardar ampliación en Drive":"Guardar respuesta en Drive";
       $("savedAnswerText").textContent=isSaved
         ? (draft?.transcript||"[Respuesta guardada sin transcripción textual]")
         : "";
@@ -1029,6 +1031,11 @@
       if(state.recorder?.state==="recording"){setStatus($("recordStatus"),"Detené la grabación antes de cambiar de pregunta.","bad");return false}
       if(state.transcribing){setStatus($("recordStatus"),"Esperá a que finalice la transcripción antes de cambiar de pregunta.","bad");return false}
       if(state.adding){
+        const hasAdditionContent=Boolean(state.audioBlob||$("transcript").value.trim()||state.materialFiles.length);
+        if(!hasAdditionContent){
+          cancelAnswerReplacement();
+          return true;
+        }
         setStatus($("saveStatus"),"Guardá o cancelá la ampliación antes de cambiar de pregunta.","bad");return false;
       }
       if(state.editingTranscript){
@@ -1207,9 +1214,10 @@
       const item=document.createElement("details");
       item.className="answer-item";
       const heading=document.createElement("summary");
+      const arrow=document.createElement("span");arrow.className="accordion-arrow";arrow.setAttribute("aria-hidden","true");
       const title=document.createElement("strong");title.textContent=`${number}. ${question}`;
       const badge=document.createElement("span");badge.className=`answer-status ${answered?"done":"pending"}`;badge.textContent=answered?"✓ Respondida":"○ Pendiente";
-      heading.append(title,badge);
+      heading.append(arrow,title,badge);
       const body=document.createElement("p");
       body.textContent=answered?(transcript||"[Respuesta guardada únicamente en audio]"):"Pendiente o no respondida.";
       if(!answered)body.style.color="var(--muted)";
