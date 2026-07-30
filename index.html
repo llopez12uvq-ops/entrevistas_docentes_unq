@@ -186,7 +186,7 @@
         <div class="saved-answer-content">
           <p id="savedAnswerText"></p>
           <span class="helper">El audio original permanece guardado. Podés ampliar lo dicho o corregir errores de la transcripción.</span>
-          <div class="actions no-print"><button id="replaceAnswerBtn" class="btn" type="button">Ampliar respuesta</button><button id="editTranscriptBtn" class="btn" type="button">Corregir transcripción</button></div>
+          <div class="actions no-print"><button id="replaceAnswerBtn" class="btn" type="button">Ampliar respuesta</button><button id="editTranscriptBtn" class="btn" type="button">Corregir transcripción</button><button id="withdrawAnswerBtn" class="btn danger" type="button">Retirar y volver a responder</button></div>
           <div id="editTranscriptBox" class="edit-transcript hide">
             <label>Transcripción corregida<textarea id="editedTranscript"></textarea></label>
             <p class="helper">Esta corrección no modifica ni elimina el audio original. La versión anterior también quedará registrada.</p>
@@ -1027,6 +1027,23 @@
       }catch(error){setStatus($("editTranscriptStatus"),error.message,"bad")}
       finally{$("saveTranscriptEditBtn").disabled=false}
     }
+    async function withdrawAnswer(){
+      const materialNotice=state.index===16?" Los materiales adjuntados en esta pregunta también serán retirados.":"";
+      const confirmed=confirm(`¿Querés retirar esta respuesta? El audio y la transcripción dejarán de formar parte de la entrevista.${materialNotice} Luego podrás responder nuevamente esta pregunta.`);
+      if(!confirmed)return;
+      $("withdrawAnswerBtn").disabled=true;setStatus($("saveStatus"),"Retirando la respuesta…");
+      try{
+        await callServer("retirarRespuesta",{sessionId:state.sessionId,questionNumber:state.index+1});
+        state.saved[state.index]=false;
+        delete state.drafts[state.index];
+        delete state.editableTranscripts[state.index];
+        delete state.savedBackups[state.index];
+        state.adding=false;state.editingTranscript=false;state.materialFiles=[];
+        resetAudio();saveLocal();render();
+        setStatus($("saveStatus"),"La respuesta fue retirada. Podés responder nuevamente esta pregunta.","ok");
+      }catch(error){setStatus($("saveStatus"),error.message,"bad")}
+      finally{$("withdrawAnswerBtn").disabled=false}
+    }
     function canChangeQuestion(){
       if(state.recorder?.state==="recording"){setStatus($("recordStatus"),"Detené la grabación antes de cambiar de pregunta.","bad");return false}
       if(state.transcribing){setStatus($("recordStatus"),"Esperá a que finalice la transcripción antes de cambiar de pregunta.","bad");return false}
@@ -1604,6 +1621,7 @@
     $("editDataBtn").onclick=editInitialData;$("saveDataBtn").onclick=saveInitialData;$("cancelDataBtn").onclick=cancelDataEdit;
     $("replaceAnswerBtn").onclick=startAnswerReplacement;$("cancelReplacementBtn").onclick=cancelAnswerReplacement;
     $("editTranscriptBtn").onclick=startTranscriptEdit;$("saveTranscriptEditBtn").onclick=saveTranscriptEdit;$("cancelTranscriptEditBtn").onclick=cancelTranscriptEdit;
+    $("withdrawAnswerBtn").onclick=withdrawAnswer;
     $("printTranscriptBtn").onclick=()=>window.print();$("closeTranscriptBtn").onclick=closeTranscript;
     $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;$("finishDiscardBtn").onclick=discardFinalAudio;
     $("transcript").oninput=markCurrentUnsaved;
