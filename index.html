@@ -769,14 +769,73 @@
           const {id,audio}=event.data;
           try{
             if(!transcriber){
-              self.postMessage({id,type:"status",text:"Descargando el modelo gratuito de transcripción…"});
-              const options={progress_callback:p=>{
+              const model="onnx-community/whisper-base";
+              const progressCallback=p=>{
                 if(p.status==="progress"&&p.progress){
-                  self.postMessage({id,type:"status",text:"Preparando el modelo de transcripción: "+Math.round(p.progress)+" %"});
+                  self.postMessage({
+                    id,
+                    type:"status",
+                    text:"Preparando el modelo de transcripción: "+Math.round(p.progress)+" %"
+                  });
                 }
-              }};
-              if(self.navigator&&self.navigator.gpu)options.device="webgpu";
-              transcriber=await pipeline("automatic-speech-recognition","onnx-community/whisper-base",options);
+              };
+
+              self.postMessage({
+                id,
+                type:"status",
+                text:"Preparando el modelo gratuito de transcripción…"
+              });
+
+              let webgpuDisponible=false;
+              try{
+                if(self.navigator&&self.navigator.gpu){
+                  const adapter=await self.navigator.gpu.requestAdapter();
+                  webgpuDisponible=!!adapter;
+                }
+              }catch(errorWebGPU){
+                webgpuDisponible=false;
+              }
+
+              if(webgpuDisponible){
+                try{
+                  self.postMessage({
+                    id,
+                    type:"status",
+                    text:"Iniciando la transcripción acelerada en este dispositivo…"
+                  });
+                  transcriber=await pipeline(
+                    "automatic-speech-recognition",
+                    model,
+                    {
+                      device:"webgpu",
+                      progress_callback:progressCallback
+                    }
+                  );
+                }catch(errorWebGPU){
+                  transcriber=null;
+                  self.postMessage({
+                    id,
+                    type:"status",
+                    text:"La aceleración gráfica no está disponible. Se utilizará un modo compatible; la primera transcripción puede demorar más."
+                  });
+                }
+              }
+
+              if(!transcriber){
+                self.postMessage({
+                  id,
+                  type:"status",
+                  text:"Preparando el modo compatible de transcripción. Este proceso puede demorar unos minutos…"
+                });
+                transcriber=await pipeline(
+                  "automatic-speech-recognition",
+                  model,
+                  {
+                    device:"wasm",
+                    progress_callback:progressCallback
+                  }
+                );
+              }
             }
             self.postMessage({id,type:"status",text:"Transcribiendo el audio…"});
             const output=await transcriber(audio,{
@@ -833,7 +892,16 @@
         state.transcriptionReady=true;
         setStatus($("recordStatus"),"Audio transcripto automáticamente. Podés revisar el texto antes de guardarlo.","ok");
       }catch(error){
-        setStatus($("recordStatus"),`No se pudo transcribir el audio: ${error.message}`,"bad");
+        const detalle=error&&error.message?error.message:String(error);
+        if(/webgpu|gpu adapter|available backend|unsafe-webgpu/i.test(detalle)){
+          setStatus(
+            $("recordStatus"),
+            "Este dispositivo no pudo iniciar la transcripción acelerada. Volvé a intentarlo: la aplicación utilizará el modo compatible, que puede demorar más. El audio grabado no se perdió.",
+            "bad"
+          );
+        }else{
+          setStatus($("recordStatus"),`No se pudo transcribir el audio: ${detalle}`,"bad");
+        }
       }finally{
         state.transcribing=false;$("saveBtn").disabled=false;
       }
@@ -1355,7 +1423,16 @@
         $("finalAnswer").value=transcript;state.finalTranscriptionReady=true;
         setStatus($("finishRecordStatus"),"Respuesta final transcripta automáticamente.","ok");
       }catch(error){
-        setStatus($("finishRecordStatus"),`No se pudo transcribir la respuesta final: ${error.message}`,"bad");
+        const detalle=error&&error.message?error.message:String(error);
+        if(/webgpu|gpu adapter|available backend|unsafe-webgpu/i.test(detalle)){
+          setStatus(
+            $("finishRecordStatus"),
+            "Este dispositivo no pudo iniciar la transcripción acelerada. Volvé a intentarlo: la aplicación utilizará el modo compatible, que puede demorar más. El audio grabado no se perdió.",
+            "bad"
+          );
+        }else{
+          setStatus($("finishRecordStatus"),`No se pudo transcribir la respuesta final: ${detalle}`,"bad");
+        }
       }finally{
         state.finalTranscribing=false;$("finishBtn").disabled=false;
       }
