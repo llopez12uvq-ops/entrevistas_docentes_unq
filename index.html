@@ -205,7 +205,7 @@
         <button id="discardAudioBtn" class="btn danger hide">Descartar grabación</button>
       </div>
       <div id="recordStatus" class="status"></div>
-      <div class="warning">La transcripción se generará automáticamente y puede demorar unos minutos. Al guardar la respuesta, el audio original y la transcripción se almacenarán en Drive.</div>
+      <div class="warning">La transcripción se generará automáticamente. En algunos dispositivos, la primera descarga y el procesamiento pueden demorar varios minutos. Revisá el texto antes de guardarlo: el audio original también se almacenará en Drive.</div>
       <audio id="preview" class="hide" controls></audio>
       <label><span id="transcriptLabel">Transcripción</span><textarea id="transcript" placeholder="Podés corregir aquí la transcripción automática o escribir notas sobre la respuesta."></textarea></label>
       <div id="materialUpload" class="material-upload hide">
@@ -702,167 +702,200 @@
       if(whisperWorker)return whisperWorker;
       const source=`
         import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm";
+
         let transcriber=null;
-        let punctuator=null;
-        function capitalizarInicio(texto){
-          return texto.replace(/(^|[.!?]\\s+|\\n+)([a-záéíóúüñ])/g,(todo,inicio,letra)=>inicio+letra.toUpperCase());
+        let activeModel="";
+        let activeDevice="";
+
+        function limpiarTexto(texto){
+          let resultado=String(texto||"")
+            .replace(/\\s+/g," ")
+            .replace(/\\s+([,.;:!?])/g,"$1")
+            .replace(/([¿¡])\\s+/g,"$1")
+            .trim();
+
+          if(!resultado)return "";
+          resultado=resultado.charAt(0).toUpperCase()+resultado.slice(1);
+          if(!/[.!?…]$/.test(resultado))resultado+=".";
+          return resultado;
         }
-        function etiquetaPuntuacion(prediccion){
-          const etiqueta=String(prediccion.entity_group||prediccion.entity||"");
-          const equivalencias={"LABEL_0":"","LABEL_1":".","LABEL_2":",","LABEL_3":"?","LABEL_4":"-","LABEL_5":":"};
-          const signo=Object.prototype.hasOwnProperty.call(equivalencias,etiqueta)?equivalencias[etiqueta]:etiqueta;
-          return [".",",","?",":","-"].includes(signo)?signo:"";
+
+        async function webgpuDisponible(){
+          try{
+            if(!self.navigator||!self.navigator.gpu)return false;
+            const adapter=await self.navigator.gpu.requestAdapter();
+            return !!adapter;
+          }catch(error){
+            return false;
+          }
         }
-        function agregarAperturaInterrogativa(texto){
-          return texto.replace(/(^|[.!]\\s+|\\n+)([^¿.!?\\n][^.!?\\n]*?)\\?/g,(todo,inicio,pregunta)=>{
-            const espacios=(pregunta.match(/^\\s*/)||[""])[0];
-            return inicio+espacios+"¿"+pregunta.slice(espacios.length).trimEnd()+"?";
-          });
+
+        function progreso(id,texto){
+          self.postMessage({id,type:"status",text:texto});
         }
-        function dividirTexto(texto,maximo=160){
-          const palabras=texto.trim().split(/\\s+/);
-          const bloques=[];
-          for(let i=0;i<palabras.length;i+=maximo)bloques.push(palabras.slice(i,i+maximo).join(" "));
-          return bloques;
-        }
-        async function puntuarBloque(texto){
-          const predicciones=await punctuator(texto,{ignore_labels:[]});
-          const inserciones=new Map();
-          for(const prediccion of predicciones){
-            const signo=etiquetaPuntuacion(prediccion);
-            const posicion=Number(prediccion.end);
-            if(!signo||!Number.isFinite(posicion)||posicion<=0)continue;
-            const anterior=inserciones.get(posicion);
-            if(!anterior||Number(prediccion.score||0)>anterior.score){
-              inserciones.set(posicion,{signo,score:Number(prediccion.score||0)});
+
+        async function cargarPipeline(id){
+          const gpu=await webgpuDisponible();
+
+          const intentos=gpu
+            ? [
+                {
+                  model:"onnx-community/whisper-small",
+                  device:"webgpu",
+                  dtype:"q4",
+                  label:"modelo de mayor precisión"
+                },
+                {
+                  model:"onnx-community/whisper-base",
+                  device:"webgpu",
+                  dtype:"q4",
+                  label:"modelo compatible acelerado"
+                },
+                {
+                  model:"onnx-community/whisper-base",
+                  device:"wasm",
+                  dtype:"q8",
+                  label:"modo compatible"
+                }
+              ]
+            : [
+                {
+                  model:"onnx-community/whisper-base",
+                  device:"wasm",
+                  dtype:"q8",
+                  label:"modo compatible"
+                }
+              ];
+
+          let ultimoError=null;
+
+          for(const intento of intentos){
+            try{
+              progreso(
+                id,
+                "Preparando "+intento.label+
+                (intento.device==="wasm"
+                  ? ". En este dispositivo puede demorar más…"
+                  : "…")
+              );
+
+              const candidate=await pipeline(
+                "automatic-speech-recognition",
+                intento.model,
+                {
+                  device:intento.device,
+                  dtype:intento.dtype,
+                  progress_callback:p=>{
+                    if(p.status==="progress"&&Number.isFinite(p.progress)){
+                      progreso(
+                        id,
+                        "Preparando el modelo de transcripción: "+
+                        Math.round(p.progress)+" %"
+                      );
+                    }
+                  }
+                }
+              );
+
+              transcriber=candidate;
+              activeModel=intento.model;
+              activeDevice=intento.device;
+              return;
+            }catch(error){
+              ultimoError=error;
+              transcriber=null;
+              progreso(
+                id,
+                "Ese modo no está disponible en este dispositivo. Probando una alternativa…"
+              );
             }
           }
-          let resultado=texto;
-          [...inserciones.entries()].sort((a,b)=>b[0]-a[0]).forEach(([posicion,dato])=>{
-            const antes=resultado.slice(0,posicion).replace(/\\s+$/,"");
-            const despues=resultado.slice(posicion).replace(/^\\s*/," ");
-            if(!/[.,?:-]$/.test(antes))resultado=antes+dato.signo+despues;
-          });
-          return resultado.trim();
+
+          throw ultimoError||new Error("No se pudo cargar ningún modelo de transcripción.");
         }
-        async function restaurarPuntuacion(texto,id){
-          if(!punctuator){
-            self.postMessage({id,type:"status",text:"Preparando la puntuación automática…"});
-            punctuator=await pipeline("token-classification","onnx-community/punctuate-all-ONNX",{
-              dtype:"q8",
-              progress_callback:p=>{
-                if(p.status==="progress"&&p.progress){
-                  self.postMessage({id,type:"status",text:"Preparando la puntuación automática: "+Math.round(p.progress)+" %"});
-                }
-              }
-            });
-          }
-          self.postMessage({id,type:"status",text:"Incorporando signos de puntuación…"});
-          const bloques=dividirTexto(texto);
-          const puntuados=[];
-          for(const bloque of bloques)puntuados.push(await puntuarBloque(bloque));
-          let resultado=puntuados.join(" ").replace(/\\s+([,.;:!?])/g,"$1").replace(/\\s+-\\s+/g," - ").trim();
-          if(resultado&&!/[.!?…]$/.test(resultado))resultado+=".";
-          return capitalizarInicio(agregarAperturaInterrogativa(resultado));
-        }
+
         self.onmessage=async event=>{
           const {id,audio}=event.data;
+
           try{
-            if(!transcriber){
-              const model="onnx-community/whisper-base";
-              const progressCallback=p=>{
-                if(p.status==="progress"&&p.progress){
-                  self.postMessage({
-                    id,
-                    type:"status",
-                    text:"Preparando el modelo de transcripción: "+Math.round(p.progress)+" %"
-                  });
-                }
-              };
+            if(!transcriber)await cargarPipeline(id);
 
-              self.postMessage({
-                id,
-                type:"status",
-                text:"Preparando el modelo gratuito de transcripción…"
-              });
+            progreso(
+              id,
+              activeDevice==="webgpu"
+                ? "Transcribiendo con el modelo de mayor precisión…"
+                : "Transcribiendo en modo compatible. Puede demorar varios minutos…"
+            );
 
-              let webgpuDisponible=false;
-              try{
-                if(self.navigator&&self.navigator.gpu){
-                  const adapter=await self.navigator.gpu.requestAdapter();
-                  webgpuDisponible=!!adapter;
-                }
-              }catch(errorWebGPU){
-                webgpuDisponible=false;
-              }
-
-              if(webgpuDisponible){
-                try{
-                  self.postMessage({
-                    id,
-                    type:"status",
-                    text:"Iniciando la transcripción acelerada en este dispositivo…"
-                  });
-                  transcriber=await pipeline(
-                    "automatic-speech-recognition",
-                    model,
-                    {
-                      device:"webgpu",
-                      progress_callback:progressCallback
-                    }
-                  );
-                }catch(errorWebGPU){
-                  transcriber=null;
-                  self.postMessage({
-                    id,
-                    type:"status",
-                    text:"La aceleración gráfica no está disponible. Se utilizará un modo compatible; la primera transcripción puede demorar más."
-                  });
-                }
-              }
-
-              if(!transcriber){
-                self.postMessage({
-                  id,
-                  type:"status",
-                  text:"Preparando el modo compatible de transcripción. Este proceso puede demorar unos minutos…"
-                });
-                transcriber=await pipeline(
-                  "automatic-speech-recognition",
-                  model,
-                  {
-                    device:"wasm",
-                    progress_callback:progressCallback
-                  }
-                );
-              }
-            }
-            self.postMessage({id,type:"status",text:"Transcribiendo el audio…"});
             const output=await transcriber(audio,{
-              language:"spanish",task:"transcribe",chunk_length_s:30,stride_length_s:5
+              language:"spanish",
+              task:"transcribe",
+              chunk_length_s:25,
+              stride_length_s:6,
+              return_timestamps:false
             });
-            const texto=(output.text||"").trim();
+
+            let texto=limpiarTexto(output&&output.text);
             if(!texto)throw new Error("No se reconoció voz en el audio.");
-            let textoFinal=capitalizarInicio(texto).replace(/([^.!?…])$/,"$1.");
-            try{
-              textoFinal=await restaurarPuntuacion(texto,id);
-            }catch(errorPuntuacion){
-              self.postMessage({id,type:"status",text:"La transcripción está lista, pero no se pudo aplicar la puntuación automática."});
+
+            const correcciones=[
+              [/\\bun cu\\b/gi,"UNQ"],
+              [/\\buniversidad nacional de quilmes\\b/gi,"Universidad Nacional de Quilmes"],
+              [/\\bia generativa\\b/gi,"IA generativa"],
+              [/\\binteligencia artificial degenerativa\\b/gi,"inteligencia artificial generativa"]
+            ];
+            for(const [patron,reemplazo] of correcciones){
+              texto=texto.replace(patron,reemplazo);
             }
-            self.postMessage({id,type:"done",text:textoFinal});
+
+            self.postMessage({
+              id,
+              type:"done",
+              text:texto,
+              model:activeModel,
+              device:activeDevice
+            });
           }catch(error){
-            self.postMessage({id,type:"error",text:error&&error.message?error.message:String(error)});
+            self.postMessage({
+              id,
+              type:"error",
+              text:error&&error.message?error.message:String(error)
+            });
           }
         };
       `;
-      whisperWorker=new Worker(URL.createObjectURL(new Blob([source],{type:"text/javascript"})),{type:"module"});
+
+      whisperWorker=new Worker(
+        URL.createObjectURL(new Blob([source],{type:"text/javascript"})),
+        {type:"module"}
+      );
+
       whisperWorker.onmessage=event=>{
         const item=whisperPending.get(event.data.id);
         if(!item)return;
-        if(event.data.type==="status"){item.status(event.data.text);return}
+
+        if(event.data.type==="status"){
+          item.status(event.data.text);
+          return;
+        }
+
         whisperPending.delete(event.data.id);
-        event.data.type==="done"?item.resolve(event.data.text):item.reject(new Error(event.data.text));
+
+        if(event.data.type==="done"){
+          item.resolve(event.data.text);
+        }else{
+          item.reject(new Error(event.data.text));
+        }
       };
+
+      whisperWorker.onerror=event=>{
+        for(const [id,item] of whisperPending.entries()){
+          item.reject(new Error(event.message||"Falló el motor local de transcripción."));
+          whisperPending.delete(id);
+        }
+        whisperWorker=null;
+      };
+
       return whisperWorker;
     }
     async function decodeAudio16k(blob){
@@ -892,16 +925,7 @@
         state.transcriptionReady=true;
         setStatus($("recordStatus"),"Audio transcripto automáticamente. Podés revisar el texto antes de guardarlo.","ok");
       }catch(error){
-        const detalle=error&&error.message?error.message:String(error);
-        if(/webgpu|gpu adapter|available backend|unsafe-webgpu/i.test(detalle)){
-          setStatus(
-            $("recordStatus"),
-            "Este dispositivo no pudo iniciar la transcripción acelerada. Volvé a intentarlo: la aplicación utilizará el modo compatible, que puede demorar más. El audio grabado no se perdió.",
-            "bad"
-          );
-        }else{
-          setStatus($("recordStatus"),`No se pudo transcribir el audio: ${detalle}`,"bad");
-        }
+        setStatus($("recordStatus"),`No se pudo transcribir el audio: ${error.message}`,"bad");
       }finally{
         state.transcribing=false;$("saveBtn").disabled=false;
       }
@@ -1423,16 +1447,7 @@
         $("finalAnswer").value=transcript;state.finalTranscriptionReady=true;
         setStatus($("finishRecordStatus"),"Respuesta final transcripta automáticamente.","ok");
       }catch(error){
-        const detalle=error&&error.message?error.message:String(error);
-        if(/webgpu|gpu adapter|available backend|unsafe-webgpu/i.test(detalle)){
-          setStatus(
-            $("finishRecordStatus"),
-            "Este dispositivo no pudo iniciar la transcripción acelerada. Volvé a intentarlo: la aplicación utilizará el modo compatible, que puede demorar más. El audio grabado no se perdió.",
-            "bad"
-          );
-        }else{
-          setStatus($("finishRecordStatus"),`No se pudo transcribir la respuesta final: ${detalle}`,"bad");
-        }
+        setStatus($("finishRecordStatus"),`No se pudo transcribir la respuesta final: ${error.message}`,"bad");
       }finally{
         state.finalTranscribing=false;$("finishBtn").disabled=false;
       }
