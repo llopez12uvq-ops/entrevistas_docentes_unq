@@ -784,6 +784,14 @@
     ];
 
     const $=id=>document.getElementById(id);
+    function escapeHtml(value){
+      return String(value ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+    }
     const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},editableTranscripts:{},pendingFollowUps:{},savedBackups:{},adding:false,editingTranscript:false,materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false,interactions:[],questionAudio:{},personalGreeting:"",adminQuestionBlob:null,adminInterventionBlob:null,adminRecorder:null,adminChunks:[],adminData:null,participantMessages:[],participantMessageBlob:null,participantMessageRecorder:null,participantMessageChunks:[],adminMessages:[],adminMessageBlob:null,participantMessageRefreshTimer:null,participantMaterials:[]};
     const localKey="entrevista-docente-unq-v2";
     let whisperWorker=null;
