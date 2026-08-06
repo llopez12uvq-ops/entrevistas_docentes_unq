@@ -217,7 +217,7 @@
       <label><span id="transcriptLabel">Transcripción</span><textarea id="transcript" placeholder="Podés escribir una respuesta o dejar este campo vacío si respondiste mediante audio. La transcripción podrá incorporarse posteriormente."></textarea></label>
       <div id="materialUpload" class="material-upload hide">
         <h3>Adjuntar materiales de enseñanza</h3>
-        <p>Podés seleccionar uno o varios archivos. Verificá previamente que no contengan información que permita identificar a estudiantes.</p>
+        <p>Podés seleccionar uno o varios archivos.</p>
         <label class="btn" style="display:inline-flex;width:auto">Seleccionar archivos
           <input id="materialFiles" class="hide" type="file" multiple accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.jpg,.jpeg,.png">
         </label>
@@ -226,7 +226,7 @@
           <button id="saveMaterialsBtn" class="btn primary" type="button" disabled>Guardar materiales en Drive</button>
         </div>
         <div id="materialSaveStatus" class="status" role="status"></div>
-        <p class="helper">Los archivos se guardan por separado y no modifican la respuesta ni crean una ampliación.</p>
+        <p class="helper">Podés agregar materiales en cualquier momento. Los archivos se guardan por separado y no modifican las respuestas, los audios ni las transcripciones.</p>
       </div>
       <div class="actions">
         <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
@@ -1070,7 +1070,7 @@
       $("transcript").value="";
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
       state.materialFiles=[];$("materialFiles").value="";$("materialFileList").innerHTML="";
-      $("materialUpload").classList.toggle("hide",state.index!==16);
+      $("materialUpload").classList.remove("hide");
       const draft=state.drafts[state.index];
       if(draft){
         $("transcript").value=draft.transcript||"";
@@ -1617,7 +1617,6 @@
       }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
     }
     async function saveMaterialsIndependently(){
-      if(state.index!==16)return;
       if(!state.sessionId){
         setStatus($("materialSaveStatus"),"Primero debés iniciar o retomar la entrevista.","bad");
         return;
