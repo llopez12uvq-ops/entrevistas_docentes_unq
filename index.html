@@ -80,13 +80,16 @@
     .forum-meta strong{color:var(--blue-dark)}
     .forum-post p{margin:0;white-space:pre-wrap}
     .forum-post .btn{margin-top:8px;padding:6px 10px;font-size:.78rem}
+    .material-inline{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:13px 0 4px;padding-top:13px;border-top:1px solid #e3f0f5}
+    .material-inline-btn{padding:8px 12px;font-size:.82rem}
+    .material-inline .helper{margin:0}
     .message-inputbar{display:flex;align-items:center;gap:8px;margin-top:14px;padding:8px 10px;border:1px solid #cbdfe9;border-radius:999px;background:#fff;box-shadow:0 6px 18px rgba(0,103,165,.06)}
     .message-inputbar input[type="text"]{flex:1;border:0;padding:10px 6px;box-shadow:none;background:transparent}
     .message-inputbar input[type="text"]:focus{box-shadow:none}
     .message-inputbar .icon-btn{width:36px;height:36px;flex:0 0 36px;border:0;background:transparent}
     .message-inputbar .icon-btn:hover:not(:disabled){background:var(--sky)}
     .message-inputbar .message-send{display:inline-grid;place-items:center;width:38px;height:38px;padding:0;border-radius:50%;margin-left:0}
-    .message-options{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}
+    .message-options{display:flex;align-items:center;gap:10px;margin-top:9px}
     .message-options select{max-width:260px;padding:8px 10px;font-size:.83rem}
     .icon-btn{display:inline-grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid #cbdfe9;border-radius:50%;background:#fff;color:var(--navy);font-size:1.05rem;font-weight:800;cursor:pointer}
     .icon-btn:hover:not(:disabled){background:var(--sky)}
@@ -263,58 +266,49 @@
       <section class="communication-hub">
         <div class="communication-title">
           <h3>Materiales y comunicación</h3>
-          <p>Podés adjuntar archivos o intercambiar mensajes con la investigadora.</p>
+          <p>Podés adjuntar materiales o intercambiar mensajes con la investigadora.</p>
         </div>
 
-        <details id="materialsSection" class="communication-section">
-          <summary>Adjuntar materiales de enseñanza</summary>
-          <div id="materialUpload" class="communication-body">
-            <p>Podés seleccionar uno o varios archivos.</p>
-            <label class="btn" style="display:inline-flex;width:auto">Seleccionar archivos
+        <div class="communication-body">
+          <div id="participantMessageHistory" class="message-history" aria-live="polite">
+            <p class="message-empty">Todavía no hay mensajes.</p>
+          </div>
+
+          <div class="material-inline">
+            <label class="btn material-inline-btn" title="Adjuntar materiales de enseñanza">
+              ＋ Adjuntar material
               <input id="materialFiles" class="hide" type="file" multiple accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.jpg,.jpeg,.png">
             </label>
-            <ul id="materialFileList" class="file-list"></ul>
-            <div class="actions">
-              <button id="saveMaterialsBtn" class="btn primary" type="button" disabled>Guardar materiales en Drive</button>
-            </div>
-            <div id="materialSaveStatus" class="status" role="status"></div>
-            <p class="helper">Los archivos se guardan por separado y no modifican las respuestas, los audios ni las transcripciones.</p>
+            <button id="saveMaterialsBtn" class="btn material-inline-btn hide" type="button" disabled>Guardar materiales</button>
+            <span id="materialInlineSummary" class="helper"></span>
           </div>
-        </details>
 
-        <details id="messagesSection" class="communication-section" open>
-          <summary>Mensajes con la investigadora</summary>
-          <div class="communication-body">
-            <div id="participantMessageHistory" class="message-history" aria-live="polite">
-              <p class="message-empty">Todavía no hay mensajes.</p>
-            </div>
+          <ul id="materialFileList" class="file-list"></ul>
+          <div id="materialSaveStatus" class="status" role="status"></div>
 
-            <div class="message-inputbar">
-              <label class="icon-btn" title="Adjuntar audio existente" aria-label="Adjuntar audio existente">＋
-                <input id="participantMessageAudioFile" class="hide" type="file" accept="audio/*">
-              </label>
-              <input id="participantMessageText" type="text" placeholder="Escribí un mensaje…">
-              <button id="participantMessageRecordBtn" class="icon-btn" type="button" title="Grabar mensaje de audio" aria-label="Grabar mensaje de audio">🎙</button>
-              <button id="participantMessageStopBtn" class="icon-btn danger" type="button" title="Detener grabación" aria-label="Detener grabación" disabled>■</button>
-              <button id="participantMessageDiscardBtn" class="icon-btn danger hide" type="button" title="Descartar audio" aria-label="Descartar audio">×</button>
-              <button id="participantMessageSendBtn" class="btn primary message-send" type="button" title="Enviar mensaje" aria-label="Enviar mensaje">➤</button>
-            </div>
-
-            <div class="message-options">
-              <label>Relacionar con una pregunta (opcional)
-                <select id="participantMessageQuestion">
-                  <option value="0">Mensaje general</option>
-                </select>
-              </label>
-              <button id="participantMessageRefreshBtn" class="btn message-refresh" type="button">Actualizar</button>
-            </div>
-
-            <audio id="participantMessagePreview" class="hide" controls></audio>
-            <div id="participantMessageStatus" class="status" role="status"></div>
+          <div class="message-inputbar">
+            <label class="icon-btn" title="Adjuntar un audio existente" aria-label="Adjuntar un audio existente">＋
+              <input id="participantMessageAudioFile" class="hide" type="file" accept="audio/*">
+            </label>
+            <input id="participantMessageText" type="text" placeholder="Escribí un mensaje…">
+            <button id="participantMessageRecordBtn" class="icon-btn" type="button" title="Grabar un mensaje de audio" aria-label="Grabar un mensaje de audio">🎙</button>
+            <button id="participantMessageStopBtn" class="icon-btn danger" type="button" title="Detener la grabación" aria-label="Detener la grabación" disabled>■</button>
+            <button id="participantMessageDiscardBtn" class="icon-btn danger hide" type="button" title="Descartar el audio" aria-label="Descartar el audio">×</button>
+            <button id="participantMessageSendBtn" class="btn primary message-send" type="button" title="Enviar mensaje" aria-label="Enviar mensaje">➤</button>
           </div>
-        </details>
-      </section>
 
+          <div class="message-options">
+            <label>Relacionar con una pregunta (opcional)
+              <select id="participantMessageQuestion">
+                <option value="0">Mensaje general</option>
+              </select>
+            </label>
+            
+          </div>
+
+          <audio id="participantMessagePreview" class="hide" controls></audio>
+          <div id="participantMessageStatus" class="status" role="status"></div>
+        </div>
       </section>
 
       <p id="responseHint" class="counter">Podés avanzar sin responder. Si grabás o adjuntás un audio, deberás guardarlo antes de continuar.</p>
@@ -1151,11 +1145,27 @@
         $("accessCode").value=data.accessCode||"";
         $("participantCode").value=data.participantCode||"";
         $("resumePin").value=data.transcriptPin||"";
-        return Boolean(
+
+        const validSession=Boolean(
           state.sessionId &&
           $("participantCode").value.trim() &&
           /^\d{4,8}$/.test($("resumePin").value.trim())
         );
+
+        if(state.sessionId&&!validSession){
+          localStorage.removeItem(localKey);
+          state.sessionId="";
+          state.index=0;
+          state.saved={};
+          setTimeout(()=>{
+            setStatus(
+              $("resumeStatus"),
+              "Para recuperar la sesión y ver los mensajes, ingresá nuevamente el código y el PIN. Se solicita una sola vez porque la sesión fue guardada con una versión anterior.",
+              ""
+            );
+          },0);
+        }
+        return validSession;
       }catch(error){return false}
     }
     function base64ToBlob(base64,mimeType){
@@ -1254,7 +1264,6 @@
       $("transcript").value="";
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
       state.materialFiles=[];$("materialFiles").value="";$("materialFileList").innerHTML="";
-      $("materialUpload").classList.remove("hide");
       const draft=state.drafts[state.index];
       if(draft){
         $("transcript").value=draft.transcript||"";
@@ -1300,6 +1309,11 @@
     }
     function renderMaterialFiles(){
       $("materialFileList").innerHTML=state.materialFiles.map(file=>`<li>${file.name}</li>`).join("");
+      const count=state.materialFiles.length;
+      $("saveMaterialsBtn").classList.toggle("hide",!count);
+      $("materialInlineSummary").textContent=count
+        ? `${count} archivo${count===1?"":"s"} seleccionado${count===1?"":"s"}`
+        : "";
     }
     function preserveCurrentDraft(){
       const transcript=$("transcript").value;
@@ -1848,10 +1862,16 @@
     }
     async function refreshParticipantMessages(){
       if(!state.sessionId)return;
+      const pin=$("resumePin").value.trim();
+      if(!/^\d{4,8}$/.test(pin)){
+        setStatus($("participantMessageStatus"),"");
+        return;
+      }
       try{
         const result=await callServer("listarMensajesParticipante",{sessionId:state.sessionId});
         state.participantMessages=result.messages||[];
         renderParticipantMessages();
+        setStatus($("participantMessageStatus"),"");
       }catch(error){
         setStatus($("participantMessageStatus"),error.message,"bad");
       }
@@ -2441,7 +2461,6 @@
     $("adminMediaListenBtn").onclick=adminMediaListen;
     $("adminMediaMp3Btn").onclick=adminMediaSaveMp3;
     $("adminMediaSaveTranscriptBtn").onclick=adminMediaSaveTranscript;
-    $("participantMessageRefreshBtn").onclick=refreshParticipantMessages;
     $("participantMessageRecordBtn").onclick=startParticipantMessageRecording;
     $("participantMessageStopBtn").onclick=stopParticipantMessageRecording;
     $("participantMessageDiscardBtn").onclick=discardParticipantMessageAudio;
