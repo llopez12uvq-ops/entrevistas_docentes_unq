@@ -231,10 +231,19 @@
       .message-history{max-height:310px}
     }
 
+  
+    .app-version{
+      padding:4px 0 16px;
+      color:#8ca0ad;
+      font-size:.68rem;
+      text-align:right;
+      user-select:none
+    }
+
   </style>
 </head>
 <body>
-  <header class="shell"><div class="brand"><span class="mark">UNQ</span><span>Entrevistas docentes<small>Investigación doctoral</small></span><button id="openAdminBtn" class="btn researcher-access" type="button">Acceso de la investigadora</button></div></header>
+  <header class="shell"><div class="brand"><span class="mark">UNQ</span><span>Entrevistas docentes<small>Investigación doctoral</small></span><button id="openAdminBtn" class="researcher-link" type="button">Acceso de la investigadora</button></div></header>
   <main class="shell">
     <section class="hero">
       <p class="eyebrow">La enseñanza mediada por IA generativa</p>
@@ -245,7 +254,7 @@
 
     <section id="setupCard" class="card">
       <h2>Datos de la entrevista</h2>
-      <input id="accessCode" type="hidden" value="">
+      <input id="accessCode" type="hidden" value="" aria-hidden="true">
       <div class="grid access-grid">
         <label>Código individual de entrevista<input id="participantCode" placeholder="Ej.: E01" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
         <label>PIN personal
@@ -2635,5 +2644,10 @@
     createTeachingSpace();
     if(restoreLocal())restoreParticipantSessionView();
   </script>
+
+  <div class="shell app-version" aria-label="Versión de la aplicación">
+    Versión 2026.08.06-1
+  </div>
+
 </body>
 </html>
