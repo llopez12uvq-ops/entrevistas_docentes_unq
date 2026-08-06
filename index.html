@@ -59,7 +59,9 @@
     .transcript-view{margin-top:22px}.transcript-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.answer-sheet{display:grid;gap:14px;margin-top:18px}.answer-item{border:1px solid var(--line);border-radius:14px;background:#f8fcfe;break-inside:avoid;overflow:hidden}.answer-item>summary{display:flex;align-items:center;gap:12px;padding:15px 17px;color:var(--navy)}.answer-item>summary strong{flex:1}.answer-item>p,.answer-item>.answer-meta{margin:0;padding:0 17px 15px;white-space:pre-wrap}.answer-meta{color:var(--muted);font-size:.8rem}
     details.accordion>summary,.saved-answer-box>summary,.answer-item>summary,.question-map>summary{list-style:none}.saved-answer-box>summary::-webkit-details-marker,.answer-item>summary::-webkit-details-marker,.question-map>summary::-webkit-details-marker{display:none}.accordion-arrow{display:inline-grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:rgba(0,103,165,.1);color:var(--blue-dark);font-size:.8rem;font-weight:900}.accordion-arrow:before{content:"▶"}.saved-answer-box[open] .accordion-arrow:before,.answer-item[open] .accordion-arrow:before,.question-map[open] .accordion-arrow:before{content:"▼"}.when-open{display:none}.saved-answer-box[open] .when-closed{display:none}.saved-answer-box[open] .when-open{display:inline}
     .saved-answer-box{margin:20px 0;border:1px solid #a9dbc7;border-left:5px solid var(--good);border-radius:14px;background:#f3fbf7;overflow:hidden}.saved-answer-box>summary{display:flex;align-items:center;gap:9px;padding:16px 18px;color:#116b4a;font-size:1.05rem}.saved-answer-content{padding:0 18px 18px}.saved-answer-box p{margin:0;white-space:pre-wrap;color:var(--ink)}.saved-answer-box .helper{margin-top:12px;color:var(--good);font-weight:700}.answer-status{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:5px 9px;border-radius:999px;font-size:.76rem;font-weight:900}.answer-status.done{background:#dff5e9;color:#116b4a}.answer-status.pending{background:#edf3f6;color:#617583}.answer-status.followup{background:#fff0bd;color:#76520a}.question-state{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.question-state .question{flex:1}.edit-transcript{margin-top:16px;padding-top:16px;border-top:1px solid #cfe7dc}
-    .researcher-access{margin-left:auto}.greeting{margin:0 0 18px;padding:15px 17px;border-left:5px solid var(--blue);border-radius:12px;background:var(--sky);white-space:pre-wrap}.thread{display:grid;gap:10px;margin:14px 0}.thread-item{padding:12px 14px;border:1px solid #bfe4f4;border-radius:15px;background:#f3fbff}.thread-item h3{margin:0 0 5px;color:var(--blue-dark);font-size:.84rem}.thread-item p{margin:0;white-space:pre-wrap}.requires-response{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:99px;background:#fff2c9;color:#76520a;font-size:.78rem;font-weight:800}
+    .researcher-link{margin-left:auto;padding:4px 0;border:0;background:transparent;color:var(--muted);font-size:.78rem;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+    .researcher-link:hover{color:var(--blue-dark)}
+    .greeting{margin:0 0 18px;padding:15px 17px;border-left:5px solid var(--blue);border-radius:12px;background:var(--sky);white-space:pre-wrap}.thread{display:grid;gap:10px;margin:14px 0}.thread-item{padding:12px 14px;border:1px solid #bfe4f4;border-radius:15px;background:#f3fbff}.thread-item h3{margin:0 0 5px;color:var(--blue-dark);font-size:.84rem}.thread-item p{margin:0;white-space:pre-wrap}.requires-response{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:99px;background:#fff2c9;color:#76520a;font-size:.78rem;font-weight:800}
     .communication-hub{margin:20px 0;border:1px solid #cce7f2;border-radius:20px;background:#fff;overflow:hidden}
     .communication-title{padding:18px 20px;border-bottom:1px solid #e3f0f5;background:linear-gradient(180deg,#fff,#f8fcfe)}
     .communication-title h3{margin:0;color:var(--navy);font-size:1.14rem}
@@ -91,7 +93,8 @@
     .icon-btn.danger{color:var(--bad);border-color:#efc1c8;background:#fff7f8}
     .icon-btn:disabled{opacity:.4;cursor:not-allowed}
     .message-refresh{padding:7px 10px;font-size:.78rem;white-space:nowrap}
-    .session-logout{padding:7px 10px;font-size:.78rem;white-space:nowrap}
+    .session-link{padding:4px 6px;border:0;background:transparent;color:var(--muted);font-size:.78rem;text-decoration:underline;text-underline-offset:3px;white-space:nowrap;cursor:pointer}
+    .session-link:hover{color:var(--bad)}
     .admin-panel{border-top:8px solid var(--navy)}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.admin-section{margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:16px;background:#f8fcfe}.admin-section h3{margin-top:0;color:var(--navy)}.admin-list{max-height:220px;overflow:auto}.admin-preview{max-height:360px;overflow:auto;white-space:pre-wrap}.question-audio{margin:4px 0 18px}
     .question-map{margin:16px 0 4px}.question-map>summary{display:flex;align-items:center;gap:9px}.question-map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;padding:0 14px 14px}.question-jump{border:1px solid var(--line);border-radius:10px;padding:8px 6px;background:#fff;color:var(--muted);font-weight:850;cursor:pointer}.question-jump.done{border-color:#a9dbc7;background:#e9f8f0;color:#116b4a}.question-jump.followup{border-color:#efd47d;background:#fff5cf;color:#76520a}.question-jump.current{box-shadow:0 0 0 3px rgba(28,171,226,.18);border-color:var(--blue)}
     @media print{body{background:#fff}.no-print,header,.hero,footer,#setupCard,#questionCard,#finishCard{display:none!important}#transcriptCard{display:block!important;margin:0;padding:0;border:0;box-shadow:none}.shell{width:100%}.answer-item{background:#fff}}
@@ -206,7 +209,7 @@
 
     <section id="questionCard" class="card hide">
       <div id="personalGreeting" class="greeting hide"></div>
-      <div class="question-top"><div class="progress"><span id="progressBar"></span></div><div id="counter" class="counter"></div><button id="participantLogoutBtn" class="btn session-logout" type="button">Cerrar sesión</button></div>
+      <div class="question-top"><div class="progress"><span id="progressBar"></span></div><div id="counter" class="counter"></div><button id="participantLogoutBtn" class="session-link" type="button">Salir</button></div>
       <details class="question-map"><summary><span class="accordion-arrow" aria-hidden="true"></span><span>Estado de las preguntas</span></summary><div id="questionMap" class="question-map-grid"></div></details>
       <div id="block" class="block"></div>
       <div class="question-state"><div id="question" class="question"></div><span id="currentQuestionStatus" class="answer-status pending">○ Pendiente</span></div>
@@ -322,7 +325,7 @@
     </section>
 
     <section id="finishCard" class="card hide">
-      <div class="transcript-head"><h2>Finalización</h2><button id="finishLogoutBtn" class="btn session-logout" type="button">Cerrar sesión</button></div>
+      <div class="transcript-head"><h2>Finalización</h2><button id="finishLogoutBtn" class="session-link" type="button">Salir</button></div>
       <p>¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?</p>
       <div id="finalQuestionAudioBox" class="question-audio hide"><button id="listenFinalQuestionBtn" class="btn" type="button">▶ Escuchar pregunta final</button><audio id="finalQuestionAudioPlayer" class="hide" controls></audio><div id="finalQuestionAudioStatus" class="status"></div></div>
       <div class="actions">
@@ -1075,7 +1078,7 @@
       const hasUnsavedAudio=Boolean(state.audioBlob||state.participantMessageBlob||state.finalAudioBlob);
       const message=hasUnsavedAudio
         ?"Hay un audio sin guardar. Si cerrás la sesión, ese audio se perderá. ¿Querés continuar?"
-        :"¿Querés cerrar la sesión en este dispositivo?";
+        :"¿Querés salir de la entrevista en este dispositivo?";
       if(!window.confirm(message))return;
 
       if(state.participantMessageRefreshTimer){
@@ -1102,7 +1105,7 @@
       $("setupCard").classList.remove("hide");
       $("resumePanel").classList.remove("hide");
       $("participantMessageHistory").innerHTML='<p class="message-empty">Todavía no hay mensajes.</p>';
-      setStatus($("resumeStatus"),"La sesión se cerró correctamente.","ok");
+      setStatus($("resumeStatus"),"Saliste de la entrevista.","ok");
       window.scrollTo({top:0,behavior:"smooth"});
     }
 
