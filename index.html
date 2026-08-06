@@ -1092,6 +1092,10 @@
       state.audioBlob=null;state.audioUrl="";state.participantMessageBlob=null;
       state.finalAudioBlob=null;state.finalAudioUrl="";
 
+      $("participantCode").value="";
+      $("resumePin").value="";
+      $("accessCode").value="";
+
       $("questionCard").classList.add("hide");
       $("finishCard").classList.add("hide");
       $("transcriptCard").classList.add("hide");
@@ -1127,7 +1131,9 @@
         drafts:state.drafts,editableTranscripts:state.editableTranscripts,
         pendingFollowUps:state.pendingFollowUps,interactions:state.interactions,
         questionAudio:state.questionAudio,personalGreeting:state.personalGreeting,
-        accessCode:$("accessCode").value,participantCode:$("participantCode").value
+        accessCode:$("accessCode").value,
+        participantCode:$("participantCode").value,
+        transcriptPin:$("resumePin").value
       }));
     }
     function restoreLocal(){
@@ -1141,7 +1147,12 @@
         state.personalGreeting=data.personalGreeting||"";
         $("accessCode").value=data.accessCode||"";
         $("participantCode").value=data.participantCode||"";
-        return Boolean(state.sessionId);
+        $("resumePin").value=data.transcriptPin||"";
+        return Boolean(
+          state.sessionId &&
+          $("participantCode").value.trim() &&
+          /^\d{4,8}$/.test($("resumePin").value.trim())
+        );
       }catch(error){return false}
     }
     function base64ToBlob(base64,mimeType){
