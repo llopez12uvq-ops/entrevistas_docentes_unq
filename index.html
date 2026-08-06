@@ -215,6 +215,15 @@
       <div class="warning">El audio se guardará inmediatamente en Drive. La transcripción podrá incorporarse después y quedará disponible para que la revises y, si lo necesitás, la corrijas.</div>
       <audio id="preview" class="hide" controls></audio>
       <label><span id="transcriptLabel">Transcripción</span><textarea id="transcript" placeholder="Podés escribir una respuesta o dejar este campo vacío si respondiste mediante audio. La transcripción podrá incorporarse posteriormente."></textarea></label>
+
+      <div class="actions">
+        <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
+        <label class="btn">Adjuntar un audio existente<input id="audioFile" class="hide" type="file" accept="audio/*"></label>
+        <button id="cancelReplacementBtn" class="btn danger hide" type="button">Cancelar ampliación</button>
+        <span id="savedMark" class="saved hide">✓ Guardada</span>
+      </div>
+      <div id="saveStatus" class="status" role="status"></div>
+      </div>
       <div id="materialUpload" class="material-upload hide">
         <h3>Adjuntar materiales de enseñanza</h3>
         <p>Podés seleccionar uno o varios archivos.</p>
@@ -227,14 +236,6 @@
         </div>
         <div id="materialSaveStatus" class="status" role="status"></div>
         <p class="helper">Podés agregar materiales en cualquier momento. Los archivos se guardan por separado y no modifican las respuestas, los audios ni las transcripciones.</p>
-      </div>
-      <div class="actions">
-        <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
-        <label class="btn">Adjuntar un audio existente<input id="audioFile" class="hide" type="file" accept="audio/*"></label>
-        <button id="cancelReplacementBtn" class="btn danger hide" type="button">Cancelar ampliación</button>
-        <span id="savedMark" class="saved hide">✓ Guardada</span>
-      </div>
-      <div id="saveStatus" class="status" role="status"></div>
       </div>
       <p id="responseHint" class="counter">Podés avanzar sin responder. Si grabás, adjuntás o escribís una respuesta, deberás guardarla antes de continuar.</p>
       <div class="nav">
