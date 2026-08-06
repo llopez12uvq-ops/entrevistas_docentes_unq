@@ -104,6 +104,133 @@
     footer{padding:26px 0 45px;text-align:center;color:var(--muted);font-size:.87rem}
     @media(max-width:760px){.access-grid{grid-template-columns:1fr}}
     @media(max-width:650px){.grid,.space-grid{grid-template-columns:1fr}.full{grid-column:auto}.hero{padding:25px 20px;border-radius:22px}.hero:after{opacity:.5}.card{padding:21px 17px}.question{font-size:1.35rem}.btn{flex-grow:1;white-space:normal}.brand small{display:none}.space-head{align-items:flex-start}.counter{white-space:normal}.nav{flex-wrap:wrap}}
+  
+    /* Responsive */
+    @media (max-width: 760px){
+      .shell{width:min(100% - 16px,940px)}
+      header{padding:14px 0 10px}
+      .hero,.card{border-radius:20px}
+      .hero{padding:24px 20px}
+      .card{padding:20px 16px}
+      h1{font-size:clamp(2rem,11vw,3.2rem)}
+      h2{font-size:1.35rem}
+      .grid,.access-grid,.space-grid{grid-template-columns:1fr}
+      .full{grid-column:auto}
+      .question-top{align-items:flex-start;flex-wrap:wrap}
+      .progress{order:1;flex-basis:100%}
+      .counter{order:2}
+      .session-link{order:3;margin-left:auto}
+      .question{font-size:clamp(1.3rem,6.5vw,1.8rem)}
+      .actions{gap:8px}
+      .actions .btn{flex:1 1 auto}
+      .nav{align-items:stretch}
+      .nav .btn{flex:1}
+      .communication-hub{border-radius:16px}
+      .communication-title{padding:15px 16px}
+      .communication-body{padding:0 14px 15px}
+      .message-history{max-height:280px;padding-top:13px}
+      .forum-post{padding:12px}
+      .forum-meta{gap:5px}
+      .material-inline{align-items:stretch}
+      .material-inline .btn{width:100%;justify-content:center}
+      .material-inline .helper{width:100%}
+      .message-inputbar{
+        display:grid;
+        grid-template-columns:40px minmax(0,1fr) 40px 40px;
+        gap:6px;
+        padding:7px;
+        border-radius:18px
+      }
+      .message-inputbar input[type="text"]{
+        grid-column:2 / 5;
+        grid-row:1;
+        width:100%;
+        padding:10px 4px
+      }
+      .message-inputbar label.icon-btn{
+        grid-column:1;
+        grid-row:1
+      }
+      .message-inputbar #participantMessageRecordBtn{
+        grid-column:1;
+        grid-row:2
+      }
+      .message-inputbar #participantMessageStopBtn{
+        grid-column:2;
+        grid-row:2;
+        justify-self:start
+      }
+      .message-inputbar #participantMessageDiscardBtn{
+        grid-column:3;
+        grid-row:2
+      }
+      .message-inputbar #participantMessageSendBtn{
+        grid-column:4;
+        grid-row:2;
+        justify-self:end
+      }
+      .message-options{display:block}
+      .message-options label{width:100%}
+      .message-options select{max-width:none;width:100%}
+      audio{min-height:40px}
+      .researcher-link{margin-left:0}
+      .brand{align-items:flex-start}
+    }
+
+    @media (max-width: 480px){
+      body{font-size:15px}
+      .shell{width:min(100% - 10px,940px)}
+      .hero{padding:21px 16px}
+      .card{padding:18px 13px}
+      .mark{width:40px;height:40px}
+      .notice,.mic-check,.resume-panel,.material-upload{padding:13px}
+      .btn{padding:10px 12px}
+      .actions{display:grid;grid-template-columns:1fr}
+      .actions .btn,.actions label.btn{width:100%;justify-content:center}
+      .nav{display:grid;grid-template-columns:1fr 1fr}
+      .question-top{gap:8px}
+      .communication-title h3{font-size:1.02rem}
+      .communication-title p{font-size:.8rem}
+      .forum-post{border-radius:12px}
+      .forum-meta{display:grid;grid-template-columns:1fr}
+      .message-inputbar{
+        grid-template-columns:38px minmax(0,1fr) 38px;
+      }
+      .message-inputbar input[type="text"]{
+        grid-column:2 / 4;
+      }
+      .message-inputbar #participantMessageRecordBtn{
+        grid-column:1;
+        grid-row:2
+      }
+      .message-inputbar #participantMessageStopBtn{
+        grid-column:2;
+        grid-row:2;
+        justify-self:start
+      }
+      .message-inputbar #participantMessageDiscardBtn{
+        grid-column:2;
+        grid-row:2;
+        justify-self:end
+      }
+      .message-inputbar #participantMessageSendBtn{
+        grid-column:3;
+        grid-row:2
+      }
+      .icon-btn{width:38px;height:38px}
+      .message-inputbar .message-send{width:38px;height:38px}
+      .counter{font-size:.8rem}
+      .session-link{font-size:.72rem}
+      input,select,textarea{font-size:16px}
+    }
+
+    @media (min-width: 761px) and (max-width: 1024px){
+      .shell{width:min(940px,calc(100% - 24px))}
+      .hero{padding:42px}
+      .card{padding:30px}
+      .message-history{max-height:310px}
+    }
+
   </style>
 </head>
 <body>
