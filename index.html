@@ -212,9 +212,9 @@
         <button id="discardAudioBtn" class="btn danger hide">Descartar grabación</button>
       </div>
       <div id="recordStatus" class="status"></div>
-      <div class="warning">El audio se guardará inmediatamente en Drive. La transcripción podrá incorporarse después y quedará disponible para que la revises y, si lo necesitás, la corrijas.</div>
+      <div class="warning">El audio se guardará inmediatamente en Drive. La investigadora incorporará la transcripción posteriormente y quedará disponible para que la revises.</div>
       <audio id="preview" class="hide" controls></audio>
-      <label><span id="transcriptLabel">Transcripción</span><textarea id="transcript" placeholder="Podés escribir una respuesta o dejar este campo vacío si respondiste mediante audio. La transcripción podrá incorporarse posteriormente."></textarea></label>
+      <textarea id="transcript" class="hide" aria-hidden="true"></textarea>
 
       <div class="actions">
         <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
@@ -264,7 +264,7 @@
         <div id="participantMessageStatus" class="status" role="status"></div>
       </section>
 
-      <p id="responseHint" class="counter">Podés avanzar sin responder. Si grabás, adjuntás o escribís una respuesta, deberás guardarla antes de continuar.</p>
+      <p id="responseHint" class="counter">Podés avanzar sin responder. Si grabás o adjuntás un audio, deberás guardarlo antes de continuar.</p>
       <div class="nav">
         <button id="prevBtn" class="btn">Anterior</button>
         <button id="nextBtn" class="btn">Siguiente</button>
@@ -1122,7 +1122,6 @@
       renderQuestionMap();
       $("nextBtn").textContent=state.index===QUESTIONS.length-1?"Ir al cierre":"Siguiente";$("nextBtn").disabled=false;
       $("savedMark").classList.toggle("hide",!state.saved[state.index]||state.adding);
-      $("transcriptLabel").textContent=state.saved[state.index]?"Tu respuesta guardada":"Transcripción";
       $("transcript").value="";
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
       state.materialFiles=[];$("materialFiles").value="";$("materialFileList").innerHTML="";
@@ -1148,7 +1147,7 @@
       $("cancelReplacementBtn").classList.toggle("hide",!state.adding);
       $("saveBtn").textContent=state.adding?"Guardar ampliación en Drive":"Guardar respuesta en Drive";
       $("savedAnswerText").textContent=isSaved
-        ? (draft?.transcript||"Transcripción pendiente. El audio fue guardado correctamente.")
+        ? (draft?.transcript||"El audio fue guardado correctamente. La transcripción será incorporada posteriormente por la investigadora.")
         : "";
       const savedAudioFile=draft?.audioFileName||"";
       $("savedAnswerAudioBox").classList.toggle("hide",!isSaved||!savedAudioFile);
@@ -1168,7 +1167,7 @@
         ?"Guardá o cancelá la ampliación antes de cambiar de pregunta."
         :isSaved
         ?"Podés continuar con la pregunta siguiente o volver a una anterior."
-        :"Podés avanzar sin responder. Si grabás, adjuntás o escribís una respuesta, deberás guardarla antes de continuar.";
+        :"Podés avanzar sin responder. Si grabás o adjuntás un audio, deberás guardarlo antes de continuar.";
     }
     function renderMaterialFiles(){
       $("materialFileList").innerHTML=state.materialFiles.map(file=>`<li>${file.name}</li>`).join("");
@@ -1187,14 +1186,12 @@
         state.savedBackups[state.index]={transcript:$("transcript").value};
         state.saved[state.index]=false;
         $("savedMark").classList.add("hide");
-        $("transcriptLabel").textContent="Respuesta modificada sin guardar";
       }
     }
     function startAnswerReplacement(){
       state.adding=true;
       render();resetAudio();$("transcript").value="";state.materialFiles=[];
-      $("transcriptLabel").textContent="Transcripción de la ampliación";
-      setStatus($("saveStatus"),"Grabá o escribí una ampliación. La respuesta anterior se conservará sin modificaciones.","");
+      setStatus($("saveStatus"),"Grabá o adjuntá un audio para ampliar la respuesta. La respuesta anterior se conservará sin modificaciones.","");
     }
     function cancelAnswerReplacement(){
       if(!state.adding)return;
@@ -1633,13 +1630,13 @@
       });
     }
     async function saveAnswer(){
-      if(!state.audioBlob&&!$("transcript").value.trim()&&!state.materialFiles.length){setStatus($("saveStatus"),"Grabá o adjuntá un audio, escribí la respuesta o adjuntá un material.","bad");return}
+      if(!state.audioBlob){setStatus($("saveStatus"),state.adding?"Grabá o adjuntá un audio para guardar la ampliación.":"Grabá o adjuntá un audio para guardar la respuesta.","bad");return}
       $("saveBtn").disabled=true;setStatus($("saveStatus"),"Guardando en Drive…");
       try{
         const isAddition=state.adding;
         const previousTranscript=state.drafts[state.index]?.transcript||"";
         const item=QUESTIONS[state.index];
-        const payload={accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:state.index+1,block:item.b,questionText:item.q,transcript:$("transcript").value.trim(),notes:"",audioBase64:"",mimeType:state.audioBlob?.type||""};
+        const payload={accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:state.index+1,block:item.b,questionText:item.q,transcript:"",notes:"",audioBase64:"",mimeType:state.audioBlob?.type||""};
         if(state.audioBlob){
           const base64=await blobToBase64(state.audioBlob);
           const chunkSize=300000;
