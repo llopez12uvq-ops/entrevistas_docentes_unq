@@ -83,6 +83,7 @@
     .icon-btn:disabled{opacity:.4;cursor:not-allowed}
     .message-send{margin-left:auto;padding:10px 17px}
     .message-refresh{padding:7px 10px;font-size:.78rem;white-space:nowrap}
+    .session-logout{padding:7px 10px;font-size:.78rem;white-space:nowrap}
     .admin-panel{border-top:8px solid var(--navy)}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.admin-section{margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:16px;background:#f8fcfe}.admin-section h3{margin-top:0;color:var(--navy)}.admin-list{max-height:220px;overflow:auto}.admin-preview{max-height:360px;overflow:auto;white-space:pre-wrap}.question-audio{margin:4px 0 18px}
     .question-map{margin:16px 0 4px}.question-map>summary{display:flex;align-items:center;gap:9px}.question-map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;padding:0 14px 14px}.question-jump{border:1px solid var(--line);border-radius:10px;padding:8px 6px;background:#fff;color:var(--muted);font-weight:850;cursor:pointer}.question-jump.done{border-color:#a9dbc7;background:#e9f8f0;color:#116b4a}.question-jump.followup{border-color:#efd47d;background:#fff5cf;color:#76520a}.question-jump.current{box-shadow:0 0 0 3px rgba(28,171,226,.18);border-color:var(--blue)}
     @media print{body{background:#fff}.no-print,header,.hero,footer,#setupCard,#questionCard,#finishCard{display:none!important}#transcriptCard{display:block!important;margin:0;padding:0;border:0;box-shadow:none}.shell{width:100%}.answer-item{background:#fff}}
@@ -197,7 +198,7 @@
 
     <section id="questionCard" class="card hide">
       <div id="personalGreeting" class="greeting hide"></div>
-      <div class="question-top"><div class="progress"><span id="progressBar"></span></div><div id="counter" class="counter"></div></div>
+      <div class="question-top"><div class="progress"><span id="progressBar"></span></div><div id="counter" class="counter"></div><button id="participantLogoutBtn" class="btn session-logout" type="button">Cerrar sesión</button></div>
       <details class="question-map"><summary><span class="accordion-arrow" aria-hidden="true"></span><span>Estado de las preguntas</span></summary><div id="questionMap" class="question-map-grid"></div></details>
       <div id="block" class="block"></div>
       <div class="question-state"><div id="question" class="question"></div><span id="currentQuestionStatus" class="answer-status pending">○ Pendiente</span></div>
@@ -309,7 +310,7 @@
     </section>
 
     <section id="finishCard" class="card hide">
-      <h2>Finalización</h2>
+      <div class="transcript-head"><h2>Finalización</h2><button id="finishLogoutBtn" class="btn session-logout" type="button">Cerrar sesión</button></div>
       <p>¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?</p>
       <div id="finalQuestionAudioBox" class="question-audio hide"><button id="listenFinalQuestionBtn" class="btn" type="button">▶ Escuchar pregunta final</button><audio id="finalQuestionAudioPlayer" class="hide" controls></audio><div id="finalQuestionAudioStatus" class="status"></div></div>
       <div class="actions">
@@ -1041,6 +1042,54 @@
         state.transcribing=false;$("saveBtn").disabled=false;
       }
     }
+    function restoreParticipantSessionView(){
+      if(!state.sessionId)return;
+      $("setupCard").classList.add("hide");
+      $("transcriptCard").classList.add("hide");
+      $("adminCard").classList.add("hide");
+      if(state.index>=QUESTIONS.length){
+        $("questionCard").classList.add("hide");
+        $("finishCard").classList.remove("hide");
+      }else{
+        $("finishCard").classList.add("hide");
+        $("questionCard").classList.remove("hide");
+        render();
+      }
+      refreshParticipantMessages();
+      startParticipantMessagePolling();
+    }
+
+    function closeParticipantSession(){
+      const hasUnsavedAudio=Boolean(state.audioBlob||state.participantMessageBlob||state.finalAudioBlob);
+      const message=hasUnsavedAudio
+        ?"Hay un audio sin guardar. Si cerrás la sesión, ese audio se perderá. ¿Querés continuar?"
+        :"¿Querés cerrar la sesión en este dispositivo?";
+      if(!window.confirm(message))return;
+
+      if(state.participantMessageRefreshTimer){
+        clearInterval(state.participantMessageRefreshTimer);
+        state.participantMessageRefreshTimer=null;
+      }
+      if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);
+      if(state.finalAudioUrl)URL.revokeObjectURL(state.finalAudioUrl);
+
+      localStorage.removeItem(localKey);
+      state.index=0;state.sessionId="";state.saved={};state.drafts={};
+      state.editableTranscripts={};state.pendingFollowUps={};state.interactions=[];
+      state.questionAudio={};state.personalGreeting="";state.participantMessages=[];
+      state.audioBlob=null;state.audioUrl="";state.participantMessageBlob=null;
+      state.finalAudioBlob=null;state.finalAudioUrl="";
+
+      $("questionCard").classList.add("hide");
+      $("finishCard").classList.add("hide");
+      $("transcriptCard").classList.add("hide");
+      $("setupCard").classList.remove("hide");
+      $("resumePanel").classList.remove("hide");
+      $("participantMessageHistory").innerHTML='<p class="message-empty">Todavía no hay mensajes.</p>';
+      setStatus($("resumeStatus"),"La sesión se cerró correctamente.","ok");
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+
     async function testMicrophone(){
       const button=$("testMicBtn");
       if(!navigator.mediaDevices?.getUserMedia){
@@ -1061,10 +1110,27 @@
       }
     }
     function saveLocal(){
-      localStorage.setItem(localKey,JSON.stringify({index:state.index,sessionId:state.sessionId,saved:state.saved,accessCode:$("accessCode").value}));
+      localStorage.setItem(localKey,JSON.stringify({
+        index:state.index,sessionId:state.sessionId,saved:state.saved,
+        drafts:state.drafts,editableTranscripts:state.editableTranscripts,
+        pendingFollowUps:state.pendingFollowUps,interactions:state.interactions,
+        questionAudio:state.questionAudio,personalGreeting:state.personalGreeting,
+        accessCode:$("accessCode").value,participantCode:$("participantCode").value
+      }));
     }
     function restoreLocal(){
-      try{const data=JSON.parse(localStorage.getItem(localKey)||"{}");state.index=data.index||0;state.sessionId=data.sessionId||"";state.saved=data.saved||{};$("accessCode").value=data.accessCode||""}catch{}
+      try{
+        const data=JSON.parse(localStorage.getItem(localKey)||"{}");
+        state.index=Number(data.index||0);state.sessionId=data.sessionId||"";
+        state.saved=data.saved||{};state.drafts=data.drafts||{};
+        state.editableTranscripts=data.editableTranscripts||{};
+        state.pendingFollowUps=data.pendingFollowUps||{};
+        state.interactions=data.interactions||[];state.questionAudio=data.questionAudio||{};
+        state.personalGreeting=data.personalGreeting||"";
+        $("accessCode").value=data.accessCode||"";
+        $("participantCode").value=data.participantCode||"";
+        return Boolean(state.sessionId);
+      }catch(error){return false}
     }
     function base64ToBlob(base64,mimeType){
       const binary=atob(base64);const bytes=new Uint8Array(binary.length);
@@ -2358,6 +2424,8 @@
       }
     };
     $("participantMessageSendBtn").onclick=sendParticipantMessage;
+    $("participantLogoutBtn").onclick=closeParticipantSession;
+    $("finishLogoutBtn").onclick=closeParticipantSession;
     $("adminMessageInterview").onchange=adminLoadMessages;
     $("adminMessageRecordBtn").onclick=startAdminMessageRecording;
     $("adminMessageStopBtn").onclick=()=>{if(state.adminRecorder?.state==="recording")state.adminRecorder.stop()};
@@ -2381,7 +2449,7 @@
     };
     window.addEventListener("beforeunload",saveLocal);
     createTeachingSpace();
-    restoreLocal();
+    if(restoreLocal())restoreParticipantSessionView();
   </script>
 </body>
 </html>
