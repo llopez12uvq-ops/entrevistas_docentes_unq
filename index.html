@@ -185,7 +185,14 @@
         <summary><span class="accordion-arrow" aria-hidden="true"></span><span class="when-closed">Ver tu respuesta guardada</span><span class="when-open">Ocultar tu respuesta guardada</span><span id="savedAnswerStatus" class="answer-status done">Respondida</span></summary>
         <div class="saved-answer-content">
           <p id="savedAnswerText"></p>
-          <span class="helper">El audio original permanece guardado. Podés ampliar lo dicho o corregir errores de la transcripción.</span>
+          <div id="savedAnswerAudioBox" class="hide">
+            <div class="actions no-print">
+              <button id="listenSavedAnswerBtn" class="btn" type="button">▶ Escuchar mi audio</button>
+            </div>
+            <audio id="savedAnswerAudio" class="hide" controls></audio>
+            <div id="savedAnswerAudioStatus" class="status" role="status"></div>
+          </div>
+          <span class="helper">El audio original permanece guardado. Podés escucharlo, ampliar lo dicho o corregir errores de la transcripción.</span>
           <div class="actions no-print"><button id="replaceAnswerBtn" class="btn" type="button">Ampliar respuesta</button><button id="editTranscriptBtn" class="btn" type="button">Corregir transcripción</button><button id="withdrawAnswerBtn" class="btn danger" type="button">Retirar y volver a responder</button></div>
           <div id="withdrawStatus" class="status" role="status"></div>
           <div id="editTranscriptBox" class="edit-transcript hide">
@@ -205,9 +212,9 @@
         <button id="discardAudioBtn" class="btn danger hide">Descartar grabación</button>
       </div>
       <div id="recordStatus" class="status"></div>
-      <div class="warning">La transcripción se generará automáticamente. En algunos dispositivos, la primera descarga y el procesamiento pueden demorar varios minutos. Revisá el texto antes de guardarlo: se almacenarán en Drive el audio original y una copia en formato MP3.</div>
+      <div class="warning">El audio se guardará inmediatamente en Drive. La transcripción podrá incorporarse después y quedará disponible para que la revises y, si lo necesitás, la corrijas.</div>
       <audio id="preview" class="hide" controls></audio>
-      <label><span id="transcriptLabel">Transcripción</span><textarea id="transcript" placeholder="Podés corregir aquí la transcripción automática o escribir notas sobre la respuesta."></textarea></label>
+      <label><span id="transcriptLabel">Transcripción</span><textarea id="transcript" placeholder="Podés escribir una respuesta o dejar este campo vacío si respondiste mediante audio. La transcripción podrá incorporarse posteriormente."></textarea></label>
       <div id="materialUpload" class="material-upload hide">
         <h3>Adjuntar materiales de enseñanza</h3>
         <p>Podés seleccionar uno o varios archivos. Verificá previamente que no contengan información que permita identificar a estudiantes.</p>
@@ -300,6 +307,37 @@
           <div class="actions"><button id="adminInterventionRecordBtn" class="btn" type="button">Grabar audio opcional</button><button id="adminInterventionStopBtn" class="btn danger" type="button" disabled>Detener</button><button id="adminInterventionDiscardBtn" class="btn danger hide" type="button">Descartar audio</button></div>
           <audio id="adminInterventionPreview" class="hide" controls></audio>
           <div class="actions"><button id="adminInterventionSaveBtn" class="btn primary" type="button">Publicar en esta entrevista</button></div>
+        </section>
+
+        <section class="admin-section">
+          <h3>Audios y transcripciones guardadas</h3>
+          <p class="helper">
+            Elegí una entrevista y una respuesta. Podés escuchar el audio original,
+            descargar una copia MP3 y publicar o actualizar la transcripción que verá
+            la persona entrevistada.
+          </p>
+          <div class="admin-grid">
+            <label>Entrevista
+              <select id="adminMediaInterview"><option value="">Seleccionar</option></select>
+            </label>
+            <label>Respuesta
+              <select id="adminMediaRecord" disabled><option value="">Seleccionar entrevista</option></select>
+            </label>
+          </div>
+          <div class="actions">
+            <button id="adminMediaListenBtn" class="btn" type="button" disabled>▶ Escuchar audio</button>
+            <button id="adminMediaMp3Btn" class="btn" type="button" disabled>Convertir y descargar MP3</button>
+          </div>
+          <audio id="adminMediaAudio" class="hide" controls></audio>
+          <div id="adminMediaStatus" class="status" role="status"></div>
+          <label style="margin-top:14px">Transcripción visible para la persona entrevistada
+            <textarea id="adminMediaTranscript" placeholder="Pegá aquí la transcripción revisada." disabled></textarea>
+          </label>
+          <div class="actions">
+            <button id="adminMediaSaveTranscriptBtn" class="btn primary" type="button" disabled>
+              Publicar o actualizar transcripción
+            </button>
+          </div>
         </section>
       </div>
       <div id="adminStatus" class="status" role="status"></div>
@@ -936,6 +974,20 @@
       for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
       return new Blob([bytes],{type:mimeType||"audio/webm"});
     }
+    async function fetchRemoteAudioBlob(fileName,adminCode=""){
+      const auth=adminCode?{adminCode}:{sessionId:state.sessionId};
+      const info=await callServer("obtenerAudioInfo",Object.assign({fileName},auth));
+      const total=Math.ceil(info.base64Length/info.chunkSize);
+      let base64="";
+      for(let chunkIndex=0;chunkIndex<total;chunkIndex++){
+        const part=await callServer("obtenerAudioFragmento",Object.assign({fileName,chunkIndex},auth));
+        base64+=part.chunk;
+      }
+      return {
+        blob:base64ToBlob(base64,info.mimeType),
+        mimeType:info.mimeType||"audio/webm"
+      };
+    }
     async function loadRemoteAudio(fileName,audioElement,statusElement,adminCode=""){
       if(!fileName)return;
       setStatus(statusElement,"Cargando audio…");
@@ -1032,8 +1084,21 @@
       $("cancelReplacementBtn").classList.toggle("hide",!state.adding);
       $("saveBtn").textContent=state.adding?"Guardar ampliación en Drive":"Guardar respuesta en Drive";
       $("savedAnswerText").textContent=isSaved
-        ? (draft?.transcript||"[Respuesta guardada sin transcripción textual]")
+        ? (draft?.transcript||"Transcripción pendiente. El audio fue guardado correctamente.")
         : "";
+      const savedAudioFile=draft?.audioFileName||"";
+      $("savedAnswerAudioBox").classList.toggle("hide",!isSaved||!savedAudioFile);
+      $("savedAnswerAudio").pause();
+      $("savedAnswerAudio").removeAttribute("src");
+      $("savedAnswerAudio").classList.add("hide");
+      setStatus($("savedAnswerAudioStatus"),"");
+      $("listenSavedAnswerBtn").onclick=()=>loadRemoteAudio(
+        savedAudioFile,$("savedAnswerAudio"),$("savedAnswerAudioStatus")
+      );
+      $("editTranscriptBtn").disabled=!Boolean(draft?.transcript?.trim());
+      $("editTranscriptBtn").title=draft?.transcript?.trim()
+        ?"Corregir la transcripción disponible"
+        :"La transcripción todavía está pendiente";
       $("editTranscriptBox").classList.add("hide");state.editingTranscript=false;
       $("responseHint").textContent=state.adding
         ?"Guardá o cancelá la ampliación antes de cambiar de pregunta."
@@ -1366,12 +1431,11 @@
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});state.chunks=[];
         markCurrentUnsaved();
-        const preferred=["audio/mpeg","audio/mp3","audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+        const preferred=["audio/webm;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t))||"";
         state.recorder=new MediaRecorder(stream,preferred?{mimeType:preferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000});
         state.recorder.ondataavailable=e=>e.data.size&&state.chunks.push(e.data);
-        state.recorder.onstop=async()=>{state.audioBlob=new Blob(state.chunks,{type:state.recorder.mimeType||"audio/webm"});showAudio();stream.getTracks().forEach(t=>t.stop());await transcribeAudioLocally()};
+        state.recorder.onstop=()=>{state.audioBlob=new Blob(state.chunks,{type:state.recorder.mimeType||"audio/webm"});state.transcribing=false;state.transcriptionReady=false;showAudio();stream.getTracks().forEach(t=>t.stop());setStatus($("recordStatus"),"Audio listo para guardar.","ok")};
         state.recorder.start();$("recordBtn").disabled=true;$("stopBtn").disabled=false;setStatus($("recordStatus"),"Grabando…","rec");
-        startSpeech();
       }catch{setStatus($("recordStatus"),"No se pudo acceder al micrófono. Revisá el permiso del navegador.","bad")}
     }
     async function startFinalRecording(){
@@ -1379,7 +1443,7 @@
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});
         const chunks=[];
-        const preferred=["audio/mpeg","audio/mp3","audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+        const preferred=["audio/webm;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t))||"";
         state.finalRecorder=new MediaRecorder(stream,preferred?{mimeType:preferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000});
         state.finalRecorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
         state.finalRecorder.onstop=async()=>{
@@ -1389,7 +1453,9 @@
           $("finishPreview").src=state.finalAudioUrl;$("finishPreview").classList.remove("hide");
           $("finishDiscardBtn").classList.remove("hide");
           stream.getTracks().forEach(t=>t.stop());
-          await transcribeFinalAudioLocally();
+          state.finalTranscribing=false;
+          state.finalTranscriptionReady=false;
+          setStatus($("finishRecordStatus"),"Audio final listo para guardar.","ok");
         };
         state.finalRecorder.start();$("finishRecordBtn").disabled=true;$("finishStopBtn").disabled=false;
         setStatus($("finishRecordStatus"),"Grabando respuesta final…","rec");
@@ -1483,55 +1549,6 @@
       setStatus($("recordStatus"),"");
     }
     function blobToBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(",")[1]);r.onerror=reject;r.readAsDataURL(blob)})}
-    function floatTo16BitPCM(float32){
-      const pcm=new Int16Array(float32.length);
-      for(let i=0;i<float32.length;i++){
-        const sample=Math.max(-1,Math.min(1,float32[i]));
-        pcm[i]=sample<0?sample*32768:sample*32767;
-      }
-      return pcm;
-    }
-    async function audioBlobToMp3(blob,statusElement){
-      if(blob.type&&blob.type.includes("mpeg"))return blob;
-      if(!window.lamejs||!window.lamejs.Mp3Encoder){
-        throw new Error("No se pudo cargar el conversor a MP3. Revisá la conexión y recargá la página.");
-      }
-      setStatus(statusElement,"Preparando la copia MP3…");
-      const samples=await decodeAudio16k(blob);
-      const pcm=floatTo16BitPCM(samples);
-      const encoder=new lamejs.Mp3Encoder(1,16000,64);
-      const blockSize=1152;
-      const parts=[];
-      for(let i=0;i<pcm.length;i+=blockSize){
-        const encoded=encoder.encodeBuffer(pcm.subarray(i,Math.min(i+blockSize,pcm.length)));
-        if(encoded.length)parts.push(new Uint8Array(encoded));
-        if(i%(blockSize*80)===0){
-          const percent=Math.min(99,Math.round((i/pcm.length)*100));
-          setStatus(statusElement,`Generando la copia MP3: ${percent} %`);
-          await new Promise(resolve=>setTimeout(resolve,0));
-        }
-      }
-      const flushed=encoder.flush();
-      if(flushed.length)parts.push(new Uint8Array(flushed));
-      return new Blob(parts,{type:"audio/mpeg"});
-    }
-    async function uploadAudioChunks(blob,uploadId,statusElement,label){
-      const base64=await blobToBase64(blob);
-      const chunkSize=300000;
-      const totalChunks=Math.ceil(base64.length/chunkSize);
-      for(let index=0;index<totalChunks;index++){
-        const percent=Math.round((index/totalChunks)*100);
-        setStatus(statusElement,`${label}: ${percent} %`);
-        await callServer("guardarFragmentoAudio",{
-          accessCode:$("accessCode").value.trim(),
-          sessionId:state.sessionId,
-          uploadId,
-          chunkIndex:index,
-          chunk:base64.slice(index*chunkSize,(index+1)*chunkSize)
-        });
-      }
-      return totalChunks;
-    }
     async function uploadMaterial(file,fileIndex,totalFiles){
       if(file.size>20*1024*1024)throw new Error(`El archivo “${file.name}” supera el máximo de 20 MB.`);
       const base64=await blobToBase64(file);
@@ -1552,8 +1569,6 @@
       });
     }
     async function saveAnswer(){
-      if(state.transcribing){setStatus($("saveStatus"),"Esperá a que finalice la transcripción automática.","bad");return}
-      if(state.audioBlob&&!state.transcriptionReady){setStatus($("saveStatus"),"El audio todavía no cuenta con una transcripción. Volvé a adjuntarlo o grabarlo para reintentar.","bad");return}
       if(!state.audioBlob&&!$("transcript").value.trim()&&!state.materialFiles.length){setStatus($("saveStatus"),"Grabá o adjuntá un audio, escribí la respuesta o adjuntá un material.","bad");return}
       $("saveBtn").disabled=true;setStatus($("saveStatus"),"Guardando en Drive…");
       try{
@@ -1562,27 +1577,20 @@
         const item=QUESTIONS[state.index];
         const payload={accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:state.index+1,block:item.b,questionText:item.q,transcript:$("transcript").value.trim(),notes:"",audioBase64:"",mimeType:state.audioBlob?.type||""};
         if(state.audioBlob){
-          const token=`q${state.index+1}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-          const uploadId=`${token}_original`;
-          const totalChunks=await uploadAudioChunks(
-            state.audioBlob,uploadId,$("saveStatus"),"Enviando el audio original a Drive"
-          );
-
-          const mp3Blob=await audioBlobToMp3(state.audioBlob,$("saveStatus"));
-          const mp3UploadId=`${token}_mp3`;
-          const mp3TotalChunks=await uploadAudioChunks(
-            mp3Blob,mp3UploadId,$("saveStatus"),"Enviando la copia MP3 a Drive"
-          );
-
-          setStatus($("saveStatus"),"Reconstruyendo y guardando ambos audios en Drive…");
-          await callServer(
-            isAddition?"guardarAmpliacionConFragmentos":"guardarRespuestaConFragmentos",
-            Object.assign({},payload,{
-              uploadId,totalChunks,
-              mp3UploadId,mp3TotalChunks,
-              mp3MimeType:"audio/mpeg"
-            })
-          );
+          const base64=await blobToBase64(state.audioBlob);
+          const chunkSize=300000;
+          const totalChunks=Math.ceil(base64.length/chunkSize);
+          const uploadId=`q${state.index+1}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          for(let index=0;index<totalChunks;index++){
+            const percent=Math.round((index/totalChunks)*100);
+            setStatus($("saveStatus"),`Enviando el audio a Drive: ${percent} %`);
+            await callServer("guardarFragmentoAudio",{
+              accessCode:payload.accessCode,sessionId:state.sessionId,uploadId,
+              chunkIndex:index,chunk:base64.slice(index*chunkSize,(index+1)*chunkSize)
+            });
+          }
+          setStatus($("saveStatus"),"Reconstruyendo y guardando el audio en Drive…");
+          await callServer(isAddition?"guardarAmpliacionConFragmentos":"guardarRespuestaConFragmentos",Object.assign({},payload,{uploadId,totalChunks}));
         }else{
           await callServer(isAddition?"guardarAmpliacion":"guardarRespuesta",payload);
         }
@@ -1604,29 +1612,19 @@
     }
     async function finish(){
       if(state.finalRecorder?.state==="recording"){setStatus($("finishStatus"),"Detené la grabación final antes de finalizar la entrevista.","bad");return}
-      if(state.finalTranscribing){setStatus($("finishStatus"),"Esperá a que termine la transcripción de la respuesta final.","bad");return}
-      if(state.finalAudioBlob&&!state.finalTranscriptionReady){setStatus($("finishStatus"),"La respuesta final grabada todavía no cuenta con transcripción.","bad");return}
       $("finishBtn").disabled=true;setStatus($("finishStatus"),"Finalizando la entrevista…");
       try{
         const finalPayload={accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:18,block:"Cierre",questionText:"¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?",transcript:$("finalAnswer").value.trim(),notes:"",audioBase64:"",mimeType:state.finalAudioBlob?.type||""};
         if(state.finalAudioBlob){
-          const token=`cierre_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-          const uploadId=`${token}_original`;
-          const totalChunks=await uploadAudioChunks(
-            state.finalAudioBlob,uploadId,$("finishStatus"),"Guardando el audio final original"
-          );
-
-          const mp3Blob=await audioBlobToMp3(state.finalAudioBlob,$("finishStatus"));
-          const mp3UploadId=`${token}_mp3`;
-          const mp3TotalChunks=await uploadAudioChunks(
-            mp3Blob,mp3UploadId,$("finishStatus"),"Guardando la copia MP3 final"
-          );
-
-          await callServer("guardarRespuestaConFragmentos",Object.assign({},finalPayload,{
-            uploadId,totalChunks,
-            mp3UploadId,mp3TotalChunks,
-            mp3MimeType:"audio/mpeg"
-          }));
+          const base64=await blobToBase64(state.finalAudioBlob);
+          const chunkSize=300000;
+          const totalChunks=Math.ceil(base64.length/chunkSize);
+          const uploadId=`cierre_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          for(let index=0;index<totalChunks;index++){
+            setStatus($("finishStatus"),`Guardando el audio final: ${Math.round((index/totalChunks)*100)} %`);
+            await callServer("guardarFragmentoAudio",{accessCode:finalPayload.accessCode,sessionId:state.sessionId,uploadId,chunkIndex:index,chunk:base64.slice(index*chunkSize,(index+1)*chunkSize)});
+          }
+          await callServer("guardarRespuestaConFragmentos",Object.assign({},finalPayload,{uploadId,totalChunks}));
         }else if(finalPayload.transcript){
           await callServer("guardarRespuesta",finalPayload);
         }
@@ -1636,6 +1634,153 @@
       }catch(error){setStatus($("finishStatus"),error.message,"bad");$("finishBtn").disabled=false}
     }
 
+    function floatTo16BitPCM(float32){
+      const pcm=new Int16Array(float32.length);
+      for(let i=0;i<float32.length;i++){
+        const sample=Math.max(-1,Math.min(1,float32[i]));
+        pcm[i]=sample<0?sample*32768:sample*32767;
+      }
+      return pcm;
+    }
+    async function convertBlobToMp3(blob,onProgress){
+      if(blob.type&&/audio\/(mpeg|mp3)/i.test(blob.type))return blob;
+      if(!window.lamejs?.Mp3Encoder){
+        throw new Error("No se pudo cargar el conversor MP3. Revisá la conexión y recargá la página.");
+      }
+      const samples=await decodeAudio16k(blob);
+      const pcm=floatTo16BitPCM(samples);
+      const encoder=new lamejs.Mp3Encoder(1,16000,64);
+      const blockSize=1152;
+      const chunks=[];
+      for(let i=0;i<pcm.length;i+=blockSize){
+        const encoded=encoder.encodeBuffer(pcm.subarray(i,Math.min(i+blockSize,pcm.length)));
+        if(encoded.length)chunks.push(new Uint8Array(encoded));
+        if(i%(blockSize*80)===0){
+          onProgress?.(Math.min(99,Math.round(i/pcm.length*100)));
+          await new Promise(resolve=>setTimeout(resolve,0));
+        }
+      }
+      const flushed=encoder.flush();
+      if(flushed.length)chunks.push(new Uint8Array(flushed));
+      onProgress?.(100);
+      return new Blob(chunks,{type:"audio/mpeg"});
+    }
+    function selectedAdminMediaRecord(){
+      const fileName=$("adminMediaRecord").value;
+      return (state.adminMediaData?.records||[]).find(item=>item.recordFileName===fileName)||null;
+    }
+    function populateAdminMediaRecords(){
+      const select=$("adminMediaRecord");
+      select.innerHTML='<option value="">Seleccionar respuesta</option>';
+      const records=state.adminMediaData?.records||[];
+      records.forEach(record=>{
+        const option=document.createElement("option");
+        option.value=record.recordFileName||"";
+        const kind=record.isAddition?`Ampliación ${record.additionNumber||""}`:"Respuesta";
+        option.textContent=`Pregunta ${record.questionNumber} · ${kind}${record.audioFileName?" · con audio":""}`;
+        select.appendChild(option);
+      });
+      select.disabled=!records.length;
+      $("adminMediaListenBtn").disabled=true;
+      $("adminMediaMp3Btn").disabled=true;
+      $("adminMediaTranscript").disabled=true;
+      $("adminMediaSaveTranscriptBtn").disabled=true;
+      $("adminMediaTranscript").value="";
+      $("adminMediaAudio").classList.add("hide");
+      $("adminMediaAudio").removeAttribute("src");
+      setStatus($("adminMediaStatus"),records.length?"Seleccioná una respuesta.":"La entrevista no tiene respuestas guardadas.");
+    }
+    async function adminMediaLoadInterview(){
+      const participantCode=$("adminMediaInterview").value;
+      state.adminMediaData=null;
+      if(!participantCode){populateAdminMediaRecords();return}
+      setStatus($("adminMediaStatus"),"Cargando respuestas…");
+      try{
+        state.adminMediaData=await callServer("adminObtenerEntrevista",Object.assign(adminAuth(),{participantCode}));
+        populateAdminMediaRecords();
+      }catch(error){setStatus($("adminMediaStatus"),error.message,"bad")}
+    }
+    function adminMediaSelectRecord(){
+      const record=selectedAdminMediaRecord();
+      const hasRecord=Boolean(record);
+      const hasAudio=Boolean(record?.audioFileName);
+      $("adminMediaListenBtn").disabled=!hasAudio;
+      $("adminMediaMp3Btn").disabled=!hasAudio;
+      $("adminMediaTranscript").disabled=!hasRecord;
+      $("adminMediaSaveTranscriptBtn").disabled=!hasRecord;
+      $("adminMediaTranscript").value=record?.transcript||"";
+      $("adminMediaAudio").pause();
+      $("adminMediaAudio").classList.add("hide");
+      $("adminMediaAudio").removeAttribute("src");
+      setStatus(
+        $("adminMediaStatus"),
+        hasRecord
+          ? (record.transcript?"Transcripción disponible. Podés revisarla o reemplazarla.":"Esta respuesta todavía no tiene transcripción.")
+          : ""
+      );
+    }
+    async function adminMediaListen(){
+      const record=selectedAdminMediaRecord();
+      if(!record?.audioFileName)return;
+      await loadRemoteAudio(
+        record.audioFileName,
+        $("adminMediaAudio"),
+        $("adminMediaStatus"),
+        $("adminCode").value.trim()
+      );
+    }
+    async function adminMediaDownloadMp3(){
+      const record=selectedAdminMediaRecord();
+      if(!record?.audioFileName)return;
+      $("adminMediaMp3Btn").disabled=true;
+      setStatus($("adminMediaStatus"),"Cargando el audio original…");
+      try{
+        const remote=await fetchRemoteAudioBlob(record.audioFileName,$("adminCode").value.trim());
+        const mp3=await convertBlobToMp3(remote.blob,percent=>{
+          setStatus($("adminMediaStatus"),`Convirtiendo a MP3: ${percent} %`);
+        });
+        const url=URL.createObjectURL(mp3);
+        const link=document.createElement("a");
+        const base=record.audioFileName.replace(/\.[^.]+$/,"");
+        link.href=url;
+        link.download=`${base}.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),30000);
+        setStatus($("adminMediaStatus"),"La copia MP3 fue generada y descargada.","ok");
+      }catch(error){
+        setStatus($("adminMediaStatus"),error.message,"bad");
+      }finally{
+        $("adminMediaMp3Btn").disabled=false;
+      }
+    }
+    async function adminMediaSaveTranscript(){
+      const record=selectedAdminMediaRecord();
+      const transcript=$("adminMediaTranscript").value.trim();
+      if(!record){return}
+      if(!transcript){
+        setStatus($("adminMediaStatus"),"La transcripción no puede quedar vacía.","bad");
+        return;
+      }
+      $("adminMediaSaveTranscriptBtn").disabled=true;
+      setStatus($("adminMediaStatus"),"Publicando la transcripción…");
+      try{
+        await callServer("adminGuardarTranscripcion",Object.assign(adminAuth(),{
+          participantCode:$("adminMediaInterview").value,
+          recordFileName:record.recordFileName,
+          transcript
+        }));
+        await adminMediaLoadInterview();
+        $("adminMediaRecord").value=record.recordFileName;
+        adminMediaSelectRecord();
+        setStatus($("adminMediaStatus"),"La transcripción ya está disponible para la persona entrevistada.","ok");
+      }catch(error){
+        setStatus($("adminMediaStatus"),error.message,"bad");
+      }finally{
+        $("adminMediaSaveTranscriptBtn").disabled=false;
+      }
+    }
     function adminAuth(){return {adminCode:$("adminCode").value.trim()}}
     function fillAdminQuestionSelect(select,includeFinal=false){
       select.innerHTML="";
@@ -1652,7 +1797,7 @@
       setStatus($("adminStatus"),"Actualizando entrevistas…");
       try{
         const result=await callServer("adminListarEntrevistas",adminAuth());
-        [$("adminInterviewList"),$("adminThreadInterview")].forEach(select=>{
+        [$("adminInterviewList"),$("adminThreadInterview"),$("adminMediaInterview")].forEach(select=>{
           const current=select.value;select.innerHTML='<option value="">Seleccionar</option>';
           (result.interviews||[]).forEach(item=>{const option=document.createElement("option");option.value=item.participantCode;option.textContent=`${item.participantCode} · ${item.participantName||"Sin nombre"} · ${item.status}`;select.appendChild(option)});
           select.value=current;
@@ -1680,13 +1825,7 @@
       if(!navigator.mediaDevices?.getUserMedia){setStatus($("adminStatus"),"Este navegador no permite grabar audio.","bad");return}
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-        state.adminChunks=[];
-        const adminPreferred=["audio/mpeg","audio/mp3","audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus"]
-          .find(t=>MediaRecorder.isTypeSupported(t))||"";
-        state.adminRecorder=new MediaRecorder(
-          stream,
-          adminPreferred?{mimeType:adminPreferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000}
-        );
+        state.adminChunks=[];state.adminRecorder=new MediaRecorder(stream);
         state.adminRecorder.ondataavailable=event=>{if(event.data.size)state.adminChunks.push(event.data)};
         state.adminRecorder.onstop=()=>{
           const blob=new Blob(state.adminChunks,{type:state.adminRecorder.mimeType||"audio/webm"});
@@ -1775,7 +1914,7 @@
     $("printTranscriptBtn").onclick=()=>window.print();$("closeTranscriptBtn").onclick=closeTranscript;
     $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;$("finishDiscardBtn").onclick=discardFinalAudio;
     $("transcript").oninput=markCurrentUnsaved;
-    $("audioFile").onchange=async e=>{const f=e.target.files[0];if(f){markCurrentUnsaved();state.audioBlob=f;showAudio();await transcribeAudioLocally()}};
+    $("audioFile").onchange=e=>{const f=e.target.files[0];if(f){markCurrentUnsaved();state.audioBlob=f;state.transcribing=false;state.transcriptionReady=false;showAudio();setStatus($("recordStatus"),"Audio adjunto listo para guardar.","ok")}};
     $("materialFiles").onchange=e=>{markCurrentUnsaved();state.materialFiles=Array.from(e.target.files||[]);renderMaterialFiles()};
     $("prevBtn").onclick=()=>{if(state.index>0&&canChangeQuestion()){preserveCurrentDraft();state.index--;saveLocal();render()}};
     $("nextBtn").onclick=()=>{if(!canChangeQuestion())return;preserveCurrentDraft();if(state.index<QUESTIONS.length-1){state.index++;saveLocal();render()}else{$("questionCard").classList.add("hide");$("finishCard").classList.remove("hide")}};
@@ -1790,6 +1929,11 @@
     $("adminQuestionRecordBtn").onclick=()=>startAdminRecording("question");$("adminQuestionStopBtn").onclick=stopAdminRecording;$("adminQuestionDiscardBtn").onclick=()=>discardAdminAudio("question");$("adminQuestionSaveBtn").onclick=adminSaveQuestionAudio;
     $("adminThreadInterview").onchange=adminLoadInterview;$("adminThreadQuestion").onchange=renderAdminConversation;
     $("adminInterventionRecordBtn").onclick=()=>startAdminRecording("intervention");$("adminInterventionStopBtn").onclick=stopAdminRecording;$("adminInterventionDiscardBtn").onclick=()=>discardAdminAudio("intervention");$("adminInterventionSaveBtn").onclick=adminSaveIntervention;
+    $("adminMediaInterview").onchange=adminMediaLoadInterview;
+    $("adminMediaRecord").onchange=adminMediaSelectRecord;
+    $("adminMediaListenBtn").onclick=adminMediaListen;
+    $("adminMediaMp3Btn").onclick=adminMediaDownloadMp3;
+    $("adminMediaSaveTranscriptBtn").onclick=adminMediaSaveTranscript;
     $("adminInterviewList").onchange=()=>{
       const code=$("adminInterviewList").value;if(!code)return;
       const option=$("adminInterviewList").selectedOptions[0];$("adminParticipantCode").value=code;
