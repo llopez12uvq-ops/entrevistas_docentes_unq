@@ -1366,7 +1366,7 @@
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});state.chunks=[];
         markCurrentUnsaved();
-        const preferred=["audio/webm;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+        const preferred=["audio/mpeg","audio/mp3","audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus"].find(t=>MediaRecorder.isTypeSupported(t))||"";
         state.recorder=new MediaRecorder(stream,preferred?{mimeType:preferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000});
         state.recorder.ondataavailable=e=>e.data.size&&state.chunks.push(e.data);
         state.recorder.onstop=async()=>{state.audioBlob=new Blob(state.chunks,{type:state.recorder.mimeType||"audio/webm"});showAudio();stream.getTracks().forEach(t=>t.stop());await transcribeAudioLocally()};
@@ -1379,7 +1379,7 @@
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});
         const chunks=[];
-        const preferred=["audio/webm;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+        const preferred=["audio/mpeg","audio/mp3","audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus"].find(t=>MediaRecorder.isTypeSupported(t))||"";
         state.finalRecorder=new MediaRecorder(stream,preferred?{mimeType:preferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000});
         state.finalRecorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
         state.finalRecorder.onstop=async()=>{
@@ -1680,7 +1680,13 @@
       if(!navigator.mediaDevices?.getUserMedia){setStatus($("adminStatus"),"Este navegador no permite grabar audio.","bad");return}
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-        state.adminChunks=[];state.adminRecorder=new MediaRecorder(stream);
+        state.adminChunks=[];
+        const adminPreferred=["audio/mpeg","audio/mp3","audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus"]
+          .find(t=>MediaRecorder.isTypeSupported(t))||"";
+        state.adminRecorder=new MediaRecorder(
+          stream,
+          adminPreferred?{mimeType:adminPreferred,audioBitsPerSecond:48000}:{audioBitsPerSecond:48000}
+        );
         state.adminRecorder.ondataavailable=event=>{if(event.data.size)state.adminChunks.push(event.data)};
         state.adminRecorder.onstop=()=>{
           const blob=new Blob(state.adminChunks,{type:state.adminRecorder.mimeType||"audio/webm"});
