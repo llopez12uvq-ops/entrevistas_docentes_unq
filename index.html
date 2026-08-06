@@ -193,7 +193,7 @@
             <div id="savedAnswerAudioStatus" class="status" role="status"></div>
           </div>
           <span class="helper">El audio original permanece guardado. Podés escucharlo, ampliar lo dicho o corregir errores de la transcripción.</span>
-          <div class="actions no-print"><button id="replaceAnswerBtn" class="btn" type="button">Ampliar respuesta</button><button id="attachEvidenceBtn" class="btn hide" type="button">Adjuntar evidencias o materiales</button><button id="editTranscriptBtn" class="btn" type="button">Corregir transcripción</button><button id="withdrawAnswerBtn" class="btn danger" type="button">Retirar y volver a responder</button></div>
+          <div class="actions no-print"><button id="replaceAnswerBtn" class="btn" type="button">Ampliar respuesta</button><button id="editTranscriptBtn" class="btn" type="button">Corregir transcripción</button><button id="withdrawAnswerBtn" class="btn danger" type="button">Retirar y volver a responder</button></div>
           <div id="withdrawStatus" class="status" role="status"></div>
           <div id="editTranscriptBox" class="edit-transcript hide">
             <label>Transcripción corregida<textarea id="editedTranscript"></textarea></label>
@@ -222,7 +222,11 @@
           <input id="materialFiles" class="hide" type="file" multiple accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.jpg,.jpeg,.png">
         </label>
         <ul id="materialFileList" class="file-list"></ul>
-        <p><small>Para enviarlos, presioná <b>Guardar respuesta en Drive</b>.</small></p>
+        <div class="actions">
+          <button id="saveMaterialsBtn" class="btn primary" type="button" disabled>Guardar materiales en Drive</button>
+        </div>
+        <div id="materialSaveStatus" class="status" role="status"></div>
+        <p class="helper">Los archivos se guardan por separado y no modifican la respuesta ni crean una ampliación.</p>
       </div>
       <div class="actions">
         <button id="saveBtn" class="btn primary">Guardar respuesta en Drive</button>
@@ -1067,7 +1071,6 @@
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
       state.materialFiles=[];$("materialFiles").value="";$("materialFileList").innerHTML="";
       $("materialUpload").classList.toggle("hide",state.index!==16);
-      $("attachEvidenceBtn").classList.toggle("hide",state.index!==16||!isSaved);
       const draft=state.drafts[state.index];
       if(draft){
         $("transcript").value=draft.transcript||"";
@@ -1135,31 +1138,11 @@
       state.adding=true;
       render();resetAudio();$("transcript").value="";state.materialFiles=[];
       $("transcriptLabel").textContent="Transcripción de la ampliación";
-      setStatus(
-        $("saveStatus"),
-        state.index===16
-          ?"Podés ampliar la respuesta o adjuntar evidencias y materiales. La respuesta anterior se conservará sin modificaciones."
-          :"Grabá o escribí una ampliación. La respuesta anterior se conservará sin modificaciones.",
-        ""
-      );
+      setStatus($("saveStatus"),"Grabá o escribí una ampliación. La respuesta anterior se conservará sin modificaciones.","");
     }
     function cancelAnswerReplacement(){
       if(!state.adding)return;
       state.adding=false;resetAudio();render();
-    }
-    function startEvidenceUpload(){
-      state.adding=true;
-      render();
-      resetAudio();
-      $("transcript").value="";
-      state.materialFiles=[];
-      $("transcriptLabel").textContent="Comentario opcional sobre las evidencias";
-      setStatus(
-        $("saveStatus"),
-        "Seleccioná uno o varios archivos y presioná “Guardar respuesta en Drive”. La respuesta anterior se conservará.",
-        ""
-      );
-      $("materialUpload").scrollIntoView({behavior:"smooth",block:"center"});
     }
     function startTranscriptEdit(){
       state.editingTranscript=true;
@@ -1619,9 +1602,7 @@
         }else{
           await callServer(isAddition?"guardarAmpliacion":"guardarRespuesta",payload);
         }
-        for(let index=0;index<state.materialFiles.length;index++){
-          await uploadMaterial(state.materialFiles[index],index,state.materialFiles.length);
-        }
+
         if(isAddition){
           const stamp=new Date().toLocaleString("es-AR");
           const addition=payload.transcript||"[Ampliación guardada sin transcripción textual]";
@@ -1635,6 +1616,36 @@
         state.saved[state.index]=true;delete state.savedBackups[state.index];saveLocal();render();
       }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
     }
+    async function saveMaterialsIndependently(){
+      if(state.index!==16)return;
+      if(!state.sessionId){
+        setStatus($("materialSaveStatus"),"Primero debés iniciar o retomar la entrevista.","bad");
+        return;
+      }
+      if(!state.materialFiles.length){
+        setStatus($("materialSaveStatus"),"Seleccioná al menos un archivo.","bad");
+        return;
+      }
+      $("saveMaterialsBtn").disabled=true;
+      setStatus($("materialSaveStatus"),"Preparando los materiales…");
+      try{
+        for(let index=0;index<state.materialFiles.length;index++){
+          const file=state.materialFiles[index];
+          setStatus($("materialSaveStatus"),`Guardando ${index+1} de ${state.materialFiles.length}: ${file.name}`);
+          await uploadMaterial(file,index,state.materialFiles.length);
+        }
+        const count=state.materialFiles.length;
+        state.materialFiles=[];
+        $("materialFiles").value="";
+        renderMaterialFiles();
+        setStatus($("materialSaveStatus"),`${count} archivo${count===1?"":"s"} guardado${count===1?"":"s"} correctamente. La respuesta no fue modificada.`,"ok");
+      }catch(error){
+        setStatus($("materialSaveStatus"),error.message,"bad");
+      }finally{
+        $("saveMaterialsBtn").disabled=!state.materialFiles.length;
+      }
+    }
+
     async function finish(){
       if(state.finalRecorder?.state==="recording"){setStatus($("finishStatus"),"Detené la grabación final antes de finalizar la entrevista.","bad");return}
       $("finishBtn").disabled=true;setStatus($("finishStatus"),"Finalizando la entrevista…");
@@ -1935,11 +1946,10 @@
     $("addTeachingSpaceBtn").onclick=()=>createTeachingSpace();
     $("otherPostgradCompleted").onchange=updatePostgradTrainingUI;
     document.querySelectorAll("#postgradChoices input").forEach(input=>input.onchange=updatePostgradTrainingUI);
-    $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("discardAudioBtn").onclick=discardCurrentAudio;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
+    $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("discardAudioBtn").onclick=discardCurrentAudio;$("saveBtn").onclick=saveAnswer;$("saveMaterialsBtn").onclick=saveMaterialsIndependently;$("finishBtn").onclick=finish;
     $("viewTranscriptBtn").onclick=viewTranscript;
     $("editDataBtn").onclick=editInitialData;$("saveDataBtn").onclick=saveInitialData;$("cancelDataBtn").onclick=cancelDataEdit;
     $("replaceAnswerBtn").onclick=startAnswerReplacement;
-    $("attachEvidenceBtn").onclick=startEvidenceUpload;
     $("cancelReplacementBtn").onclick=cancelAnswerReplacement;
     $("editTranscriptBtn").onclick=startTranscriptEdit;$("saveTranscriptEditBtn").onclick=saveTranscriptEdit;$("cancelTranscriptEditBtn").onclick=cancelTranscriptEdit;
     $("withdrawAnswerBtn").onclick=withdrawAnswer;
@@ -1947,7 +1957,12 @@
     $("finishRecordBtn").onclick=startFinalRecording;$("finishStopBtn").onclick=stopFinalRecording;$("finishDiscardBtn").onclick=discardFinalAudio;
     $("transcript").oninput=markCurrentUnsaved;
     $("audioFile").onchange=e=>{const f=e.target.files[0];if(f){markCurrentUnsaved();state.audioBlob=f;state.transcribing=false;state.transcriptionReady=false;showAudio();setStatus($("recordStatus"),"Audio adjunto listo para guardar.","ok")}};
-    $("materialFiles").onchange=e=>{markCurrentUnsaved();state.materialFiles=Array.from(e.target.files||[]);renderMaterialFiles()};
+    $("materialFiles").onchange=e=>{
+      state.materialFiles=Array.from(e.target.files||[]);
+      renderMaterialFiles();
+      $("saveMaterialsBtn").disabled=!state.materialFiles.length;
+      setStatus($("materialSaveStatus"),state.materialFiles.length?`${state.materialFiles.length} archivo${state.materialFiles.length===1?"":"s"} seleccionado${state.materialFiles.length===1?"":"s"}.`:"");
+    };
     $("prevBtn").onclick=()=>{if(state.index>0&&canChangeQuestion()){preserveCurrentDraft();state.index--;saveLocal();render()}};
     $("nextBtn").onclick=()=>{if(!canChangeQuestion())return;preserveCurrentDraft();if(state.index<QUESTIONS.length-1){state.index++;saveLocal();render()}else{$("questionCard").classList.add("hide");$("finishCard").classList.remove("hide")}};
     $("backToQuestionsBtn").onclick=()=>{
