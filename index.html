@@ -974,8 +974,10 @@
       for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
       return new Blob([bytes],{type:mimeType||"audio/webm"});
     }
-    async function fetchRemoteAudioBlob(fileName,adminCode=""){
-      const auth=adminCode?{adminCode}:{sessionId:state.sessionId};
+    async function fetchRemoteAudioBlob(fileName,adminCode="",participantCode=""){
+      const auth=adminCode
+        ? {adminCode,participantCode}
+        : {sessionId:state.sessionId};
       const info=await callServer("obtenerAudioInfo",Object.assign({fileName},auth));
       const total=Math.ceil(info.base64Length/info.chunkSize);
       let base64="";
@@ -988,11 +990,13 @@
         mimeType:info.mimeType||"audio/webm"
       };
     }
-    async function loadRemoteAudio(fileName,audioElement,statusElement,adminCode=""){
+    async function loadRemoteAudio(fileName,audioElement,statusElement,adminCode="",participantCode=""){
       if(!fileName)return;
       setStatus(statusElement,"Cargando audio…");
       try{
-        const auth=adminCode?{adminCode}:{sessionId:state.sessionId};
+        const auth=adminCode
+          ? {adminCode,participantCode}
+          : {sessionId:state.sessionId};
         const info=await callServer("obtenerAudioInfo",Object.assign({fileName},auth));
         const total=Math.ceil(info.base64Length/info.chunkSize);let base64="";
         for(let chunkIndex=0;chunkIndex<total;chunkIndex++){
@@ -1726,7 +1730,8 @@
         record.audioFileName,
         $("adminMediaAudio"),
         $("adminMediaStatus"),
-        $("adminCode").value.trim()
+        $("adminCode").value.trim(),
+        $("adminMediaInterview").value
       );
     }
     async function adminMediaDownloadMp3(){
@@ -1735,7 +1740,11 @@
       $("adminMediaMp3Btn").disabled=true;
       setStatus($("adminMediaStatus"),"Cargando el audio original…");
       try{
-        const remote=await fetchRemoteAudioBlob(record.audioFileName,$("adminCode").value.trim());
+        const remote=await fetchRemoteAudioBlob(
+          record.audioFileName,
+          $("adminCode").value.trim(),
+          $("adminMediaInterview").value
+        );
         const mp3=await convertBlobToMp3(remote.blob,percent=>{
           setStatus($("adminMediaStatus"),`Convirtiendo a MP3: ${percent} %`);
         });
