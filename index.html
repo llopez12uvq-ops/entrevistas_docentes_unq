@@ -61,7 +61,17 @@
     .saved-answer-box{margin:20px 0;border:1px solid #a9dbc7;border-left:5px solid var(--good);border-radius:14px;background:#f3fbf7;overflow:hidden}.saved-answer-box>summary{display:flex;align-items:center;gap:9px;padding:16px 18px;color:#116b4a;font-size:1.05rem}.saved-answer-content{padding:0 18px 18px}.saved-answer-box p{margin:0;white-space:pre-wrap;color:var(--ink)}.saved-answer-box .helper{margin-top:12px;color:var(--good);font-weight:700}.answer-status{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:5px 9px;border-radius:999px;font-size:.76rem;font-weight:900}.answer-status.done{background:#dff5e9;color:#116b4a}.answer-status.pending{background:#edf3f6;color:#617583}.answer-status.followup{background:#fff0bd;color:#76520a}.question-state{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.question-state .question{flex:1}.edit-transcript{margin-top:16px;padding-top:16px;border-top:1px solid #cfe7dc}
     .researcher-link{margin-left:auto;padding:4px 0;border:0;background:transparent;color:var(--muted);font-size:.78rem;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
     .researcher-link:hover{color:var(--blue-dark)}
-    .greeting{margin:0 0 18px;padding:15px 17px;border-left:5px solid var(--blue);border-radius:12px;background:var(--sky);white-space:pre-wrap}.thread{display:grid;gap:10px;margin:14px 0}.thread-item{padding:12px 14px;border:1px solid #bfe4f4;border-radius:15px;background:#f3fbff}.thread-item h3{margin:0 0 5px;color:var(--blue-dark);font-size:.84rem}.thread-item p{margin:0;white-space:pre-wrap}.requires-response{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:99px;background:#fff2c9;color:#76520a;font-size:.78rem;font-weight:800}
+    .greeting{margin:0 0 18px;padding:15px 17px;border-left:5px solid var(--blue);border-radius:12px;background:var(--sky);white-space:pre-wrap}
+    .greeting-compact{margin:0 0 13px;border:1px solid #d8ebf3;border-radius:12px;background:#f9fcfe}
+    .greeting-compact>summary{display:flex;align-items:center;gap:7px;padding:9px 12px;color:var(--muted);font-size:.8rem;font-weight:800;cursor:pointer}
+    .greeting-compact[open]>summary{border-bottom:1px solid #e5f0f5;color:var(--blue-dark)}
+    .greeting-compact>p{margin:0;padding:11px 13px;color:var(--ink);font-size:.9rem;white-space:pre-wrap}
+    .entry-delete{display:inline-grid;place-items:center;width:29px;height:29px;margin-left:auto;padding:0;border:0;border-radius:50%;background:transparent;color:#8a9ba6;font-size:.92rem;cursor:pointer}
+    .entry-delete:hover{background:#fff0f2;color:var(--bad)}
+    .forum-meta .entry-delete{margin-left:auto}
+    .material-record{position:relative}
+    .material-record .entry-delete{flex:0 0 29px}
+    .thread{display:grid;gap:10px;margin:14px 0}.thread-item{padding:12px 14px;border:1px solid #bfe4f4;border-radius:15px;background:#f3fbff}.thread-item h3{margin:0 0 5px;color:var(--blue-dark);font-size:.84rem}.thread-item p{margin:0;white-space:pre-wrap}.requires-response{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:99px;background:#fff2c9;color:#76520a;font-size:.78rem;font-weight:800}
     .communication-hub{margin:20px 0;border:1px solid #cce7f2;border-radius:20px;background:#fff;overflow:hidden}
     .communication-title{padding:18px 20px;border-bottom:1px solid #e3f0f5;background:linear-gradient(180deg,#fff,#f8fcfe)}
     .communication-title h3{margin:0;color:var(--navy);font-size:1.14rem}
@@ -385,7 +395,10 @@
     </section>
 
     <section id="questionCard" class="card hide">
-      <div id="personalGreeting" class="greeting hide"></div>
+      <details id="personalGreetingBox" class="greeting-compact hide">
+        <summary><span aria-hidden="true">💬</span><span>Mensaje de bienvenida</span></summary>
+        <p id="personalGreeting"></p>
+      </details>
       <div class="question-top"><div class="progress"><span id="progressBar"></span></div><div id="counter" class="counter"></div></div>
       <details class="question-map"><summary><span class="accordion-arrow" aria-hidden="true"></span><span>Estado de las preguntas</span></summary><div id="questionMap" class="question-map-grid"></div></details>
       <div id="block" class="block"></div>
@@ -1284,6 +1297,8 @@
       state.index=0;state.sessionId="";state.saved={};state.drafts={};
       state.editableTranscripts={};state.pendingFollowUps={};state.interactions=[];
       state.questionAudio={};state.personalGreeting="";state.participantMessages=[];
+      $("personalGreetingBox").classList.add("hide");
+      $("personalGreetingBox").open=false;
       state.audioBlob=null;state.audioUrl="";state.participantMessageBlob=null;
       state.finalAudioBlob=null;state.finalAudioUrl="";
 
@@ -1451,7 +1466,8 @@
       $("counter").textContent=`${state.index+1} de ${QUESTIONS.length}`;$("progressBar").style.width=`${(state.index+1)/QUESTIONS.length*100}%`;
       $("probes").innerHTML=item.p.map(x=>`<li>${x}</li>`).join("");$("prevBtn").disabled=state.index===0;
       $("personalGreeting").textContent=state.personalGreeting||"";
-      $("personalGreeting").classList.toggle("hide",!state.personalGreeting);
+      $("personalGreetingBox").classList.toggle("hide",!state.personalGreeting);
+      if(!$("personalGreetingBox").classList.contains("hide"))$("personalGreetingBox").open=false;
       const questionAudioFile=state.questionAudio?.[state.index+1];
       $("questionAudioBox").classList.toggle("hide",!questionAudioFile);
       $("questionAudioPlayer").classList.add("hide");$("questionAudioPlayer").removeAttribute("src");
@@ -2025,6 +2041,24 @@
       if(!value)return "";
       try{return new Date(value).toLocaleString("es-AR")}catch(error){return value}
     }
+    async function deleteParticipantMessage(message){
+      if(!message||message.author==="Investigadora")return;
+      const description=message.text
+        ? `“${message.text.slice(0,80)}${message.text.length>80?"…":""}”`
+        : "este mensaje de audio";
+      if(!window.confirm(`¿Querés eliminar ${description}? Se enviará a la papelera de Drive.`))return;
+      setStatus($("participantMessageStatus"),"Eliminando mensaje…");
+      try{
+        await callServer("eliminarMensajeParticipante",{
+          sessionId:state.sessionId,
+          sequence:Number(message.sequence)
+        });
+        await refreshParticipantMessages();
+        setStatus($("participantMessageStatus"),"Mensaje eliminado.","ok");
+      }catch(error){
+        setStatus($("participantMessageStatus"),error.message,"bad");
+      }
+    }
     function renderParticipantMessages(){
       const box=$("participantMessageHistory");
       box.innerHTML="";
@@ -2041,6 +2075,16 @@
         const relation=Number(message.questionNumber)>0?`Pregunta ${message.questionNumber}`:"Mensaje general";
         item.innerHTML=`<div class="forum-meta"><strong>${escapeHtml(author)}</strong><span>${escapeHtml(formatMessageDate(message.savedAt))}</span><span>${escapeHtml(relation)}</span></div>
           <p>${escapeHtml(message.text||"[Mensaje de audio]").replace(/\n/g,"<br>")}</p>`;
+        if(mine){
+          const deleteButton=document.createElement("button");
+          deleteButton.type="button";
+          deleteButton.className="entry-delete";
+          deleteButton.title="Eliminar mensaje";
+          deleteButton.setAttribute("aria-label","Eliminar mensaje");
+          deleteButton.textContent="🗑";
+          deleteButton.onclick=()=>deleteParticipantMessage(message);
+          item.querySelector(".forum-meta").appendChild(deleteButton);
+        }
         if(message.audioFileName){
           const button=document.createElement("button");
           button.type="button";
@@ -2071,6 +2115,22 @@
         setStatus($("participantMessageStatus"),error.message,"bad");
       }
     }
+    async function deleteParticipantMaterial(material){
+      if(!material?.fileName)return;
+      const visibleName=String(material.displayName||material.fileName||"este material").replace(/^material_/,"");
+      if(!window.confirm(`¿Querés eliminar “${visibleName}”? Se enviará a la papelera de Drive.`))return;
+      setStatus($("materialSaveStatus"),"Eliminando material…");
+      try{
+        await callServer("eliminarMaterialParticipante",{
+          sessionId:state.sessionId,
+          fileName:material.fileName
+        });
+        await refreshParticipantMaterials();
+        setStatus($("materialSaveStatus"),"Material eliminado.","ok");
+      }catch(error){
+        setStatus($("materialSaveStatus"),error.message,"bad");
+      }
+    }
     function renderParticipantMaterials(){
       const box=$("participantMaterialHistory");
       box.innerHTML="";
@@ -2086,6 +2146,14 @@
         item.innerHTML=`<span class="material-record-icon" aria-hidden="true">📎</span>
           <span><strong>${escapeHtml(visibleName)}</strong>
           <small>${escapeHtml(formatMessageDate(material.savedAt))}</small></span>`;
+        const deleteButton=document.createElement("button");
+        deleteButton.type="button";
+        deleteButton.className="entry-delete";
+        deleteButton.title="Eliminar material";
+        deleteButton.setAttribute("aria-label","Eliminar material");
+        deleteButton.textContent="🗑";
+        deleteButton.onclick=()=>deleteParticipantMaterial(material);
+        item.appendChild(deleteButton);
         box.appendChild(item);
       });
     }
@@ -2737,7 +2805,7 @@
   </script>
 
   <div class="shell app-version" aria-label="Versión de la aplicación">
-    Versión 2026.08.06-2
+    Versión 2026.08.06-3
   </div>
 
 </body>
