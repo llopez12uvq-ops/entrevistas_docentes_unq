@@ -193,7 +193,7 @@
             <div id="savedAnswerAudioStatus" class="status" role="status"></div>
           </div>
           <span class="helper">El audio original permanece guardado. Podés escucharlo, ampliar lo dicho o corregir errores de la transcripción.</span>
-          <div class="actions no-print"><button id="replaceAnswerBtn" class="btn" type="button">Ampliar respuesta</button><button id="editTranscriptBtn" class="btn" type="button">Corregir transcripción</button><button id="withdrawAnswerBtn" class="btn danger" type="button">Retirar y volver a responder</button></div>
+          <div class="actions no-print"><button id="replaceAnswerBtn" class="btn" type="button">Ampliar respuesta</button><button id="attachEvidenceBtn" class="btn hide" type="button">Adjuntar evidencias o materiales</button><button id="editTranscriptBtn" class="btn" type="button">Corregir transcripción</button><button id="withdrawAnswerBtn" class="btn danger" type="button">Retirar y volver a responder</button></div>
           <div id="withdrawStatus" class="status" role="status"></div>
           <div id="editTranscriptBox" class="edit-transcript hide">
             <label>Transcripción corregida<textarea id="editedTranscript"></textarea></label>
@@ -1067,6 +1067,7 @@
       resetAudio();setStatus($("saveStatus"),"");setStatus($("recordStatus"),"");
       state.materialFiles=[];$("materialFiles").value="";$("materialFileList").innerHTML="";
       $("materialUpload").classList.toggle("hide",state.index!==16);
+      $("attachEvidenceBtn").classList.toggle("hide",state.index!==16||!isSaved);
       const draft=state.drafts[state.index];
       if(draft){
         $("transcript").value=draft.transcript||"";
@@ -1134,11 +1135,31 @@
       state.adding=true;
       render();resetAudio();$("transcript").value="";state.materialFiles=[];
       $("transcriptLabel").textContent="Transcripción de la ampliación";
-      setStatus($("saveStatus"),"Grabá o escribí una ampliación. La respuesta anterior se conservará sin modificaciones.","");
+      setStatus(
+        $("saveStatus"),
+        state.index===16
+          ?"Podés ampliar la respuesta o adjuntar evidencias y materiales. La respuesta anterior se conservará sin modificaciones."
+          :"Grabá o escribí una ampliación. La respuesta anterior se conservará sin modificaciones.",
+        ""
+      );
     }
     function cancelAnswerReplacement(){
       if(!state.adding)return;
       state.adding=false;resetAudio();render();
+    }
+    function startEvidenceUpload(){
+      state.adding=true;
+      render();
+      resetAudio();
+      $("transcript").value="";
+      state.materialFiles=[];
+      $("transcriptLabel").textContent="Comentario opcional sobre las evidencias";
+      setStatus(
+        $("saveStatus"),
+        "Seleccioná uno o varios archivos y presioná “Guardar respuesta en Drive”. La respuesta anterior se conservará.",
+        ""
+      );
+      $("materialUpload").scrollIntoView({behavior:"smooth",block:"center"});
     }
     function startTranscriptEdit(){
       state.editingTranscript=true;
@@ -1598,7 +1619,7 @@
         }else{
           await callServer(isAddition?"guardarAmpliacion":"guardarRespuesta",payload);
         }
-        for(let index=0;index<state.materialFiles.length&&!isAddition;index++){
+        for(let index=0;index<state.materialFiles.length;index++){
           await uploadMaterial(state.materialFiles[index],index,state.materialFiles.length);
         }
         if(isAddition){
@@ -1917,7 +1938,9 @@
     $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("discardAudioBtn").onclick=discardCurrentAudio;$("saveBtn").onclick=saveAnswer;$("finishBtn").onclick=finish;
     $("viewTranscriptBtn").onclick=viewTranscript;
     $("editDataBtn").onclick=editInitialData;$("saveDataBtn").onclick=saveInitialData;$("cancelDataBtn").onclick=cancelDataEdit;
-    $("replaceAnswerBtn").onclick=startAnswerReplacement;$("cancelReplacementBtn").onclick=cancelAnswerReplacement;
+    $("replaceAnswerBtn").onclick=startAnswerReplacement;
+    $("attachEvidenceBtn").onclick=startEvidenceUpload;
+    $("cancelReplacementBtn").onclick=cancelAnswerReplacement;
     $("editTranscriptBtn").onclick=startTranscriptEdit;$("saveTranscriptEditBtn").onclick=saveTranscriptEdit;$("cancelTranscriptEditBtn").onclick=cancelTranscriptEdit;
     $("withdrawAnswerBtn").onclick=withdrawAnswer;
     $("printTranscriptBtn").onclick=()=>window.print();$("closeTranscriptBtn").onclick=closeTranscript;
