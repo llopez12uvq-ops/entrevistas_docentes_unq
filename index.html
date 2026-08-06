@@ -60,28 +60,36 @@
     details.accordion>summary,.saved-answer-box>summary,.answer-item>summary,.question-map>summary{list-style:none}.saved-answer-box>summary::-webkit-details-marker,.answer-item>summary::-webkit-details-marker,.question-map>summary::-webkit-details-marker{display:none}.accordion-arrow{display:inline-grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:rgba(0,103,165,.1);color:var(--blue-dark);font-size:.8rem;font-weight:900}.accordion-arrow:before{content:"▶"}.saved-answer-box[open] .accordion-arrow:before,.answer-item[open] .accordion-arrow:before,.question-map[open] .accordion-arrow:before{content:"▼"}.when-open{display:none}.saved-answer-box[open] .when-closed{display:none}.saved-answer-box[open] .when-open{display:inline}
     .saved-answer-box{margin:20px 0;border:1px solid #a9dbc7;border-left:5px solid var(--good);border-radius:14px;background:#f3fbf7;overflow:hidden}.saved-answer-box>summary{display:flex;align-items:center;gap:9px;padding:16px 18px;color:#116b4a;font-size:1.05rem}.saved-answer-content{padding:0 18px 18px}.saved-answer-box p{margin:0;white-space:pre-wrap;color:var(--ink)}.saved-answer-box .helper{margin-top:12px;color:var(--good);font-weight:700}.answer-status{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:5px 9px;border-radius:999px;font-size:.76rem;font-weight:900}.answer-status.done{background:#dff5e9;color:#116b4a}.answer-status.pending{background:#edf3f6;color:#617583}.answer-status.followup{background:#fff0bd;color:#76520a}.question-state{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.question-state .question{flex:1}.edit-transcript{margin-top:16px;padding-top:16px;border-top:1px solid #cfe7dc}
     .researcher-access{margin-left:auto}.greeting{margin:0 0 18px;padding:15px 17px;border-left:5px solid var(--blue);border-radius:12px;background:var(--sky);white-space:pre-wrap}.thread{display:grid;gap:10px;margin:14px 0}.thread-item{padding:12px 14px;border:1px solid #bfe4f4;border-radius:15px;background:#f3fbff}.thread-item h3{margin:0 0 5px;color:var(--blue-dark);font-size:.84rem}.thread-item p{margin:0;white-space:pre-wrap}.requires-response{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:99px;background:#fff2c9;color:#76520a;font-size:.78rem;font-weight:800}
-    .message-panel{margin:20px 0;padding:0;border:1px solid #cce7f2;border-radius:20px;background:#fff;overflow:hidden}
-    .message-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:17px 18px 12px;border-bottom:1px solid #e3f0f5}
-    .message-panel-head h3{margin:0;color:var(--navy);font-size:1.08rem}
-    .message-panel-head p{margin:3px 0 0;color:var(--muted);font-size:.84rem}
-    .message-history{display:grid;gap:9px;max-height:300px;overflow:auto;padding:16px 18px;background:#f8fcfe}
+    .communication-hub{margin:20px 0;border:1px solid #cce7f2;border-radius:20px;background:#fff;overflow:hidden}
+    .communication-title{padding:18px 20px;border-bottom:1px solid #e3f0f5;background:linear-gradient(180deg,#fff,#f8fcfe)}
+    .communication-title h3{margin:0;color:var(--navy);font-size:1.14rem}
+    .communication-title p{margin:4px 0 0;color:var(--muted);font-size:.86rem}
+    .communication-section{margin:0;border:0;border-radius:0;background:#fff}
+    .communication-section+.communication-section{border-top:1px solid #e3f0f5}
+    .communication-section summary{padding:15px 19px;background:#fff;color:var(--navy);font-size:.98rem}
+    .communication-section[open] summary{background:#f8fcfe}
+    .communication-body{padding:0 18px 18px}
+    .message-history{display:grid;gap:12px;max-height:330px;overflow:auto;padding:16px 0 4px}
     .message-empty{margin:0;color:var(--muted);font-size:.88rem;text-align:center}
-    .message-bubble{max-width:82%;padding:10px 12px;border-radius:15px;background:#fff;border:1px solid #d7eaf3;box-shadow:0 3px 10px rgba(0,103,165,.05)}
-    .message-bubble.mine{margin-left:auto;background:#e8f7fd;border-bottom-right-radius:5px}
-    .message-bubble.theirs{margin-right:auto;border-bottom-left-radius:5px}
-    .message-bubble h4{margin:0 0 3px;color:var(--blue-dark);font-size:.76rem}
-    .message-bubble p{margin:0;font-size:.92rem;white-space:pre-wrap}
-    .message-bubble time{display:block;margin-top:5px;color:var(--muted);font-size:.72rem}
-    .message-bubble .btn{margin-top:7px;padding:6px 10px;font-size:.78rem}
-    .message-compose{padding:14px 18px 17px}
-    .message-compose textarea{min-height:76px;border-radius:14px}
-    .message-compose select{padding:9px 11px;font-size:.86rem}
-    .message-tools{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .forum-post{padding:14px 15px;border:1px solid #d7eaf3;border-radius:14px;background:#fff}
+    .forum-post.mine{border-left:4px solid var(--blue);background:#f8fcfe}
+    .forum-post.theirs{border-left:4px solid var(--good)}
+    .forum-meta{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:6px;color:var(--muted);font-size:.76rem}
+    .forum-meta strong{color:var(--blue-dark)}
+    .forum-post p{margin:0;white-space:pre-wrap}
+    .forum-post .btn{margin-top:8px;padding:6px 10px;font-size:.78rem}
+    .message-inputbar{display:flex;align-items:center;gap:8px;margin-top:14px;padding:8px 10px;border:1px solid #cbdfe9;border-radius:999px;background:#fff;box-shadow:0 6px 18px rgba(0,103,165,.06)}
+    .message-inputbar input[type="text"]{flex:1;border:0;padding:10px 6px;box-shadow:none;background:transparent}
+    .message-inputbar input[type="text"]:focus{box-shadow:none}
+    .message-inputbar .icon-btn{width:36px;height:36px;flex:0 0 36px;border:0;background:transparent}
+    .message-inputbar .icon-btn:hover:not(:disabled){background:var(--sky)}
+    .message-inputbar .message-send{display:inline-grid;place-items:center;width:38px;height:38px;padding:0;border-radius:50%;margin-left:0}
+    .message-options{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}
+    .message-options select{max-width:260px;padding:8px 10px;font-size:.83rem}
     .icon-btn{display:inline-grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid #cbdfe9;border-radius:50%;background:#fff;color:var(--navy);font-size:1.05rem;font-weight:800;cursor:pointer}
     .icon-btn:hover:not(:disabled){background:var(--sky)}
     .icon-btn.danger{color:var(--bad);border-color:#efc1c8;background:#fff7f8}
     .icon-btn:disabled{opacity:.4;cursor:not-allowed}
-    .message-send{margin-left:auto;padding:10px 17px}
     .message-refresh{padding:7px 10px;font-size:.78rem;white-space:nowrap}
     .session-logout{padding:7px 10px;font-size:.78rem;white-space:nowrap}
     .admin-panel{border-top:8px solid var(--navy)}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.admin-section{margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:16px;background:#f8fcfe}.admin-section h3{margin-top:0;color:var(--navy)}.admin-list{max-height:220px;overflow:auto}.admin-preview{max-height:360px;overflow:auto;white-space:pre-wrap}.question-audio{margin:4px 0 18px}
@@ -249,57 +257,61 @@
       </div>
       <div id="saveStatus" class="status" role="status"></div>
       </div>
-      <div id="materialUpload" class="material-upload hide">
-        <h3>Adjuntar materiales de enseñanza</h3>
-        <p>Podés seleccionar uno o varios archivos.</p>
-        <label class="btn" style="display:inline-flex;width:auto">Seleccionar archivos
-          <input id="materialFiles" class="hide" type="file" multiple accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.jpg,.jpeg,.png">
-        </label>
-        <ul id="materialFileList" class="file-list"></ul>
-        <div class="actions">
-          <button id="saveMaterialsBtn" class="btn primary" type="button" disabled>Guardar materiales en Drive</button>
-        </div>
-        <div id="materialSaveStatus" class="status" role="status"></div>
-        <p class="helper">Podés agregar materiales en cualquier momento. Los archivos se guardan por separado y no modifican las respuestas, los audios ni las transcripciones.</p>
-      </div>
-      <section id="participantMessages" class="message-panel">
-        <div class="message-panel-head">
-          <div>
-            <h3>Mensajes con la investigadora</h3>
-            <p>Este espacio es independiente de tus respuestas y transcripciones.</p>
-          </div>
-          <button id="participantMessageRefreshBtn" class="btn message-refresh" type="button">Actualizar</button>
+      <section class="communication-hub">
+        <div class="communication-title">
+          <h3>Materiales y comunicación</h3>
+          <p>Podés adjuntar archivos o intercambiar mensajes con la investigadora.</p>
         </div>
 
-        <div id="participantMessageHistory" class="message-history" aria-live="polite">
-          <p class="message-empty">Todavía no hay mensajes.</p>
-        </div>
-
-        <div class="message-compose">
-          <label>
-            <span class="hide">Mensaje</span>
-            <textarea id="participantMessageText" placeholder="Escribí un mensaje para la investigadora…"></textarea>
-          </label>
-
-          <label style="margin-top:9px">Relacionar con una pregunta (opcional)
-            <select id="participantMessageQuestion">
-              <option value="0">Mensaje general</option>
-            </select>
-          </label>
-
-          <div class="message-tools">
-            <button id="participantMessageRecordBtn" class="icon-btn" type="button" title="Grabar mensaje de audio" aria-label="Grabar mensaje de audio">🎙</button>
-            <button id="participantMessageStopBtn" class="icon-btn danger" type="button" title="Detener grabación" aria-label="Detener grabación" disabled>■</button>
-            <button id="participantMessageDiscardBtn" class="icon-btn danger hide" type="button" title="Descartar audio" aria-label="Descartar audio">×</button>
-            <label class="icon-btn" title="Adjuntar audio existente" aria-label="Adjuntar audio existente">＋
-              <input id="participantMessageAudioFile" class="hide" type="file" accept="audio/*">
+        <details id="materialsSection" class="communication-section">
+          <summary>Adjuntar materiales de enseñanza</summary>
+          <div id="materialUpload" class="communication-body">
+            <p>Podés seleccionar uno o varios archivos.</p>
+            <label class="btn" style="display:inline-flex;width:auto">Seleccionar archivos
+              <input id="materialFiles" class="hide" type="file" multiple accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.jpg,.jpeg,.png">
             </label>
-            <button id="participantMessageSendBtn" class="btn primary message-send" type="button">Enviar</button>
+            <ul id="materialFileList" class="file-list"></ul>
+            <div class="actions">
+              <button id="saveMaterialsBtn" class="btn primary" type="button" disabled>Guardar materiales en Drive</button>
+            </div>
+            <div id="materialSaveStatus" class="status" role="status"></div>
+            <p class="helper">Los archivos se guardan por separado y no modifican las respuestas, los audios ni las transcripciones.</p>
           </div>
+        </details>
 
-          <audio id="participantMessagePreview" class="hide" controls></audio>
-          <div id="participantMessageStatus" class="status" role="status"></div>
-        </div>
+        <details id="messagesSection" class="communication-section" open>
+          <summary>Mensajes con la investigadora</summary>
+          <div class="communication-body">
+            <div id="participantMessageHistory" class="message-history" aria-live="polite">
+              <p class="message-empty">Todavía no hay mensajes.</p>
+            </div>
+
+            <div class="message-inputbar">
+              <label class="icon-btn" title="Adjuntar audio existente" aria-label="Adjuntar audio existente">＋
+                <input id="participantMessageAudioFile" class="hide" type="file" accept="audio/*">
+              </label>
+              <input id="participantMessageText" type="text" placeholder="Escribí un mensaje…">
+              <button id="participantMessageRecordBtn" class="icon-btn" type="button" title="Grabar mensaje de audio" aria-label="Grabar mensaje de audio">🎙</button>
+              <button id="participantMessageStopBtn" class="icon-btn danger" type="button" title="Detener grabación" aria-label="Detener grabación" disabled>■</button>
+              <button id="participantMessageDiscardBtn" class="icon-btn danger hide" type="button" title="Descartar audio" aria-label="Descartar audio">×</button>
+              <button id="participantMessageSendBtn" class="btn primary message-send" type="button" title="Enviar mensaje" aria-label="Enviar mensaje">➤</button>
+            </div>
+
+            <div class="message-options">
+              <label>Relacionar con una pregunta (opcional)
+                <select id="participantMessageQuestion">
+                  <option value="0">Mensaje general</option>
+                </select>
+              </label>
+              <button id="participantMessageRefreshBtn" class="btn message-refresh" type="button">Actualizar</button>
+            </div>
+
+            <audio id="participantMessagePreview" class="hide" controls></audio>
+            <div id="participantMessageStatus" class="status" role="status"></div>
+          </div>
+        </details>
+      </section>
+
       </section>
 
       <p id="responseHint" class="counter">Podés avanzar sin responder. Si grabás o adjuntás un audio, deberás guardarlo antes de continuar.</p>
@@ -1796,19 +1808,25 @@
       messages.forEach(message=>{
         const mine=message.author!=="Investigadora";
         const item=document.createElement("article");
-        item.className=`message-bubble ${mine?"mine":"theirs"}`;
+        item.className=`forum-post ${mine?"mine":"theirs"}`;
         const author=mine?"Vos":"Investigadora";
-        const relation=Number(message.questionNumber)>0?` · Pregunta ${message.questionNumber}`:"";
-        item.innerHTML=`<h4>${escapeHtml(author)}${relation}</h4>
-          <p>${escapeHtml(message.text||"[Mensaje de audio]").replace(/\n/g,"<br>")}</p>
-          <time>${escapeHtml(formatMessageDate(message.savedAt))}</time>`;
+        const relation=Number(message.questionNumber)>0?`Pregunta ${message.questionNumber}`:"Mensaje general";
+        item.innerHTML=`<div class="forum-meta"><strong>${escapeHtml(author)}</strong><span>${escapeHtml(formatMessageDate(message.savedAt))}</span><span>${escapeHtml(relation)}</span></div>
+          <p>${escapeHtml(message.text||"[Mensaje de audio]").replace(/\n/g,"<br>")}</p>`;
         if(message.audioFileName){
           const button=document.createElement("button");
-          button.type="button";button.className="btn";button.textContent="▶ Escuchar audio";
-          const audio=document.createElement("audio");audio.controls=true;audio.className="hide";
-          const status=document.createElement("div");status.className="status";
+          button.type="button";
+          button.className="btn";
+          button.textContent="▶ Escuchar audio";
+          const audio=document.createElement("audio");
+          audio.controls=true;
+          audio.className="hide";
+          const status=document.createElement("div");
+          status.className="status";
           button.onclick=()=>loadRemoteAudio(message.audioFileName,audio,status);
-          item.appendChild(button);item.appendChild(audio);item.appendChild(status);
+          item.appendChild(button);
+          item.appendChild(audio);
+          item.appendChild(status);
         }
         box.appendChild(item);
       });
@@ -2424,6 +2442,12 @@
       }
     };
     $("participantMessageSendBtn").onclick=sendParticipantMessage;
+    $("participantMessageText").addEventListener("keydown",event=>{
+      if(event.key==="Enter"&&!event.shiftKey){
+        event.preventDefault();
+        sendParticipantMessage();
+      }
+    });
     $("participantLogoutBtn").onclick=closeParticipantSession;
     $("finishLogoutBtn").onclick=closeParticipantSession;
     $("adminMessageInterview").onchange=adminLoadMessages;
