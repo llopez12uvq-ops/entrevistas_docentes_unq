@@ -312,7 +312,7 @@
       <div id="resumePanel" class="resume-panel">
         <p>Completá el código individual y el PIN que te envió la investigadora. Si ya comenzaste, podés retomar la entrevista o consultar las respuestas guardadas.</p>
         <div class="actions">
-          <button id="resumeBtn" class="btn">Retomar entrevista</button>
+          <button id="resumeBtn" class="btn">Ingresar / retomar entrevista</button>
           <button id="viewTranscriptBtn" class="btn" type="button">Ver mis respuestas</button>
           <button id="editDataBtn" class="btn" type="button">Actualizar datos iniciales</button>
         </div>
@@ -1291,11 +1291,22 @@
       $("questionCard").classList.add("hide");
       $("finishCard").classList.add("hide");
       $("transcriptCard").classList.add("hide");
+      $("adminCard").classList.add("hide");
       $("setupCard").classList.remove("hide");
       $("resumePanel").classList.remove("hide");
+      $("newInterviewControls").classList.remove("hide");
+      $("editDataActions").classList.add("hide");
+      $("setupFormTitle").textContent="Para iniciar una nueva entrevista";
+
+      // Restaurar los controles de acceso para que otra persona pueda ingresar.
+      $("resumeBtn").disabled=false;
+      $("viewTranscriptBtn").disabled=false;
+      $("editDataBtn").disabled=false;
+
       $("participantMessageHistory").innerHTML='<p class="message-empty">Todavía no hay mensajes.</p>';
       $("participantMaterialHistory").innerHTML='<p class="message-empty">Todavía no hay materiales enviados.</p>';
-      setStatus($("resumeStatus"),"Saliste de la entrevista.","ok");
+      setStatus($("setupStatus"),"");
+      setStatus($("resumeStatus"),"Saliste de la entrevista. Podés ingresar nuevamente con un código individual y PIN.","ok");
       window.scrollTo({top:0,behavior:"smooth"});
     }
 
