@@ -452,32 +452,22 @@
       </div>
       <section class="communication-hub">
         <div class="communication-title">
-          <h3>Materiales y comunicación</h3>
-          <p>Podés adjuntar materiales o intercambiar mensajes con la investigadora.</p>
+          <h3>Materiales / evidencias de esta pregunta</h3>
+          <p id="materialQuestionContext">Los archivos que adjuntes quedarán vinculados automáticamente con esta pregunta.</p>
         </div>
 
         <div class="communication-body">
-          <div class="communication-columns">
-            <section class="communication-column">
-              <div class="history-heading">
-                <h4>Intercambio de mensajes</h4>
-                <button id="refreshCommunicationBtn" class="history-refresh" type="button" title="Actualizar historial" aria-label="Actualizar historial">↻</button>
-              </div>
-              <div id="participantMessageHistory" class="message-history" aria-live="polite">
-                <p class="message-empty">Todavía no hay mensajes.</p>
-              </div>
-            </section>
+          <div class="history-heading">
+            <h4>Materiales enviados</h4>
+            <button id="refreshCommunicationBtn" class="history-refresh" type="button" title="Actualizar materiales" aria-label="Actualizar materiales">↻</button>
+          </div>
 
-            <section class="communication-column">
-              <div class="history-heading"><h4>Materiales enviados</h4></div>
-              <div id="participantMaterialHistory" class="material-history" aria-live="polite">
-                <p class="message-empty">Todavía no hay materiales enviados.</p>
-              </div>
-            </section>
+          <div id="participantMaterialHistory" class="material-history" aria-live="polite">
+            <p class="message-empty">Todavía no hay materiales enviados para esta pregunta.</p>
           </div>
 
           <div class="material-inline">
-            <label class="btn material-inline-btn" title="Adjuntar materiales de enseñanza">
+            <label class="btn material-inline-btn" title="Adjuntar materiales vinculados con esta pregunta">
               ＋ Adjuntar material
               <input id="materialFiles" class="hide" type="file" multiple accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.jpg,.jpeg,.png">
             </label>
@@ -487,31 +477,23 @@
 
           <ul id="materialFileList" class="file-list"></ul>
           <div id="materialSaveStatus" class="status" role="status"></div>
-
-          <div class="message-inputbar">
-            <label class="icon-btn" title="Adjuntar un audio existente" aria-label="Adjuntar un audio existente">＋
-              <input id="participantMessageAudioFile" class="hide" type="file" accept="audio/*">
-            </label>
-            <input id="participantMessageText" type="text" placeholder="Escribí un mensaje…">
-            <button id="participantMessageRecordBtn" class="icon-btn" type="button" title="Grabar un mensaje de audio" aria-label="Grabar un mensaje de audio">🎙</button>
-            <button id="participantMessageStopBtn" class="icon-btn danger" type="button" title="Detener la grabación" aria-label="Detener la grabación" disabled>■</button>
-            <button id="participantMessageDiscardBtn" class="icon-btn danger hide" type="button" title="Descartar el audio" aria-label="Descartar el audio">×</button>
-            <button id="participantMessageSendBtn" class="btn primary message-send" type="button" title="Enviar mensaje" aria-label="Enviar mensaje">➤</button>
-          </div>
-
-          <div class="message-options">
-            <label>Relacionar con una pregunta (opcional)
-              <select id="participantMessageQuestion">
-                <option value="0">Mensaje general</option>
-              </select>
-            </label>
-            
-          </div>
-
-          <audio id="participantMessagePreview" class="hide" controls></audio>
-          <div id="participantMessageStatus" class="status" role="status"></div>
         </div>
       </section>
+
+      <!-- Elementos de mensajería conservados ocultos para compatibilidad interna.
+           La comunicación visible se realiza mediante repreguntas/comentarios vinculados con cada pregunta. -->
+      <div class="hide" aria-hidden="true">
+        <div id="participantMessageHistory"></div>
+        <input id="participantMessageText" type="text">
+        <select id="participantMessageQuestion"><option value="0">Mensaje general</option></select>
+        <input id="participantMessageAudioFile" type="file" accept="audio/*">
+        <button id="participantMessageRecordBtn" type="button"></button>
+        <button id="participantMessageStopBtn" type="button"></button>
+        <button id="participantMessageDiscardBtn" type="button"></button>
+        <button id="participantMessageSendBtn" type="button"></button>
+        <audio id="participantMessagePreview"></audio>
+        <div id="participantMessageStatus"></div>
+      </div>
 
       <p id="responseHint" class="counter">Podés avanzar sin responder. Si grabás o adjuntás un audio, deberás guardarlo antes de continuar.</p>
       <div class="nav">
@@ -590,7 +572,7 @@
           <div class="actions"><button id="adminInterventionSaveBtn" class="btn primary" type="button">Publicar en esta entrevista</button></div>
         </section>
 
-        <section class="admin-section">
+        <section class="admin-section hide">
           <h3>Mensajes con la persona entrevistada</h3>
           <p class="helper">Este intercambio queda separado de las respuestas, ampliaciones y transcripciones.</p>
           <label>Entrevista
@@ -1275,8 +1257,7 @@
         $("questionCard").classList.remove("hide");
         render();
       }
-      refreshParticipantMessages();
-      startParticipantMessagePolling();
+      refreshParticipantMaterials();
     }
 
     function closeParticipantSession(){
@@ -1522,6 +1503,8 @@
         :isSaved
         ?"Podés continuar con la pregunta siguiente o volver a una anterior."
         :"Podés avanzar sin responder. Si grabás o adjuntás un audio, deberás guardarlo antes de continuar.";
+      $("materialQuestionContext").textContent=`Los archivos que adjuntes quedarán vinculados automáticamente con la pregunta ${state.index+1}.`;
+      renderParticipantMaterials();
     }
     function renderMaterialFiles(){
       $("materialFileList").innerHTML=state.materialFiles.map(file=>`<li>${file.name}</li>`).join("");
@@ -1985,6 +1968,7 @@
       }
       await callServer("guardarMaterialConFragmentos",{
         accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,uploadId,
+        questionNumber:state.index+1,
         totalChunks,fileName:file.name,mimeType:file.type||"application/octet-stream"
       });
     }
@@ -2123,7 +2107,8 @@
       try{
         await callServer("eliminarMaterialParticipante",{
           sessionId:state.sessionId,
-          fileName:material.fileName
+          fileName:material.fileName,
+          questionNumber:Number(material.questionNumber||state.index+1)
         });
         await refreshParticipantMaterials();
         setStatus($("materialSaveStatus"),"Material eliminado.","ok");
@@ -2134,9 +2119,10 @@
     function renderParticipantMaterials(){
       const box=$("participantMaterialHistory");
       box.innerHTML="";
-      const materials=state.participantMaterials||[];
+      const currentQuestion=state.index+1;
+      const materials=(state.participantMaterials||[]).filter(material=>Number(material.questionNumber||0)===currentQuestion);
       if(!materials.length){
-        box.innerHTML='<p class="message-empty">Todavía no hay materiales enviados.</p>';
+        box.innerHTML=`<p class="message-empty">Todavía no hay materiales enviados para la pregunta ${currentQuestion}.</p>`;
         return;
       }
       materials.forEach(material=>{
@@ -2145,7 +2131,7 @@
         const visibleName=String(material.displayName||material.fileName||"Material").replace(/^material_/,"");
         item.innerHTML=`<span class="material-record-icon" aria-hidden="true">📎</span>
           <span><strong>${escapeHtml(visibleName)}</strong>
-          <small>${escapeHtml(formatMessageDate(material.savedAt))}</small></span>`;
+          <small>Pregunta ${currentQuestion} · ${escapeHtml(formatMessageDate(material.savedAt))}</small></span>`;
         const deleteButton=document.createElement("button");
         deleteButton.type="button";
         deleteButton.className="entry-delete";
@@ -2168,7 +2154,7 @@
       }
     }
     async function refreshParticipantCommunication(){
-      await Promise.all([refreshParticipantMessages(),refreshParticipantMaterials()]);
+      await refreshParticipantMaterials();
     }
     function startParticipantMessagePolling(){
       if(state.participantMessageRefreshTimer)clearInterval(state.participantMessageRefreshTimer);
@@ -2289,7 +2275,7 @@
         $("materialFiles").value="";
         renderMaterialFiles();
         await refreshParticipantMaterials();
-        setStatus($("materialSaveStatus"),`${count} archivo${count===1?"":"s"} guardado${count===1?"":"s"} correctamente. La respuesta no fue modificada.`,"ok");
+        setStatus($("materialSaveStatus"),`${count} archivo${count===1?"":"s"} guardado${count===1?"":"s"} y vinculado${count===1?"":"s"} con la pregunta ${state.index+1}. La respuesta no fue modificada.`,"ok");
       }catch(error){
         setStatus($("materialSaveStatus"),error.message,"bad");
       }finally{
@@ -2777,7 +2763,7 @@
       }
     });
     $("headerLogoutBtn").onclick=closeParticipantSession;
-    $("refreshCommunicationBtn").onclick=refreshParticipantCommunication;
+    $("refreshCommunicationBtn").onclick=refreshParticipantMaterials;
     $("adminMessageInterview").onchange=adminLoadMessages;
     $("adminMessageRecordBtn").onclick=startAdminMessageRecording;
     $("adminMessageStopBtn").onclick=()=>{if(state.adminRecorder?.state==="recording")state.adminRecorder.stop()};
@@ -2805,7 +2791,7 @@
   </script>
 
   <div class="shell app-version" aria-label="Versión de la aplicación">
-    Versión 2026.08.06-3
+    Versión 2026.08.08-4
   </div>
 
 </body>
