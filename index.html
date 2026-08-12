@@ -1475,10 +1475,11 @@
         const answered=Boolean(state.saved[index]);
         const followup=Boolean(state.pendingFollowUps[index]);
         const completedWithoutAnswer=Boolean(state.drafts[index]?.completedWithoutAnswer);
+        const completedWithMaterials=Boolean(state.drafts[index]?.completedWithMaterials);
         const button=document.createElement("button");button.type="button";
         button.className=`question-jump ${followup?"followup":answered?"done":""} ${index===state.index?"current":""}`.trim();
         button.textContent=followup?`! ${index+1}`:answered?`✓ ${index+1}`:`○ ${index+1}`;
-        button.title=`Pregunta ${index+1}: ${followup?"requiere ampliación":completedWithoutAnswer?"completada sin respuesta adicional":answered?"respondida":"pendiente"}`;
+        button.title=`Pregunta ${index+1}: ${followup?"requiere ampliación":completedWithoutAnswer?"completada sin respuesta adicional":completedWithMaterials?"respondida mediante envío de materiales":answered?"respondida":"pendiente"}`;
         button.onclick=()=>{if(index===state.index||!canChangeQuestion())return;preserveCurrentDraft();state.index=index;saveLocal();render()};
         map.appendChild(button);
       });
@@ -1515,6 +1516,7 @@
       const requiresFollowUp=Boolean(state.pendingFollowUps[state.index]);
       const isClosingQuestion=state.index===QUESTIONS.length-1;
       const completedWithoutAnswer=Boolean(state.drafts[state.index]?.completedWithoutAnswer);
+      const completedWithMaterials=Boolean(state.drafts[state.index]?.completedWithMaterials);
       const status=$("currentQuestionStatus");
       status.className=`answer-status ${requiresFollowUp?"followup":isSaved?"done":"pending"}`;
       status.textContent=requiresFollowUp
@@ -1529,6 +1531,8 @@
         ?"Requiere ampliación"
         :completedWithoutAnswer
         ?"Completada"
+        :completedWithMaterials
+        ?"Respondida · materiales enviados"
         :"Respondida";
       $("savedAnswerBox").classList.toggle("hide",!isSaved);
       $("responseEditor").classList.toggle("hide",isSaved&&!state.adding);
@@ -1539,6 +1543,8 @@
       $("savedAnswerText").textContent=isSaved
         ? (completedWithoutAnswer
           ?"La pregunta de cierre fue completada sin respuesta adicional."
+          :completedWithMaterials && !draft?.transcript && !draft?.audioFileName
+          ?"Los materiales solicitados fueron enviados y quedaron vinculados con esta pregunta."
           :(draft?.transcript||"El audio fue guardado correctamente. La transcripción será incorporada posteriormente por la investigadora."))
         : "";
       const savedAudioFile=draft?.audioFileName||"";
@@ -1692,6 +1698,7 @@
         state.interactions=[];state.pendingFollowUps={};state.questionAudio=result.questionAudio||{};state.personalGreeting=result.personalGreeting||"";
         $("heroTitle").textContent="Entrevista docente";saveLocal();
         $("setupCard").classList.add("hide");$("headerLogoutBtn").classList.remove("hide");$("questionCard").classList.remove("hide");render();
+        await refreshParticipantMaterials();
       }catch(error){setStatus($("setupStatus"),error.message,"bad");$("startBtn").disabled=false}
     }
     function applyInterviewMetadata(metadata){
@@ -1805,6 +1812,7 @@
         applyInterviewMetadata(result.metadata||{});
         $("heroTitle").textContent="Entrevista docente";saveLocal();
         $("setupCard").classList.add("hide");$("headerLogoutBtn").classList.remove("hide");$("questionCard").classList.remove("hide");render();
+        await refreshParticipantMaterials();
       }catch(error){
         setStatus($("resumeStatus"),error.message,"bad");$("resumeBtn").disabled=false;
       }
@@ -2374,7 +2382,20 @@
         $("materialFiles").value="";
         renderMaterialFiles();
         await refreshParticipantMaterials();
-        setStatus($("materialSaveStatus"),`${count} archivo${count===1?"":"s"} guardado${count===1?"":"s"} y vinculado${count===1?"":"s"} con la pregunta ${state.index+1}. La respuesta no fue modificada.`,"ok");
+
+        // En la pregunta 17, el envío de materiales constituye la acción solicitada.
+        // Volvemos a consultar el estado para que aparezca como respondida de inmediato.
+        if(state.index===16){
+          const refreshed=await callServer("retomarEntrevista",interviewCredentials());
+          state.saved=refreshed.saved||state.saved;
+          state.drafts=refreshed.drafts||state.drafts;
+          state.editableTranscripts=refreshed.editableTranscripts||state.editableTranscripts;
+          state.interactions=refreshed.interactions||state.interactions;
+          state.pendingFollowUps=refreshed.pendingFollowUps||state.pendingFollowUps;
+          render();
+        }
+
+        setStatus($("materialSaveStatus"),`${count} archivo${count===1?"":"s"} guardado${count===1?"":"s"} y vinculado${count===1?"":"s"} con la pregunta ${state.index+1}.`,"ok");
       }catch(error){
         setStatus($("materialSaveStatus"),error.message,"bad");
       }finally{
