@@ -463,6 +463,14 @@
         <button id="cancelReplacementBtn" class="btn danger hide" type="button">Cancelar ampliación</button>
         <span id="savedMark" class="saved hide">✓ Guardada</span>
       </div>
+
+      <div id="closingNoMoreBox" class="resume-panel hide" style="margin-top:16px">
+        <p>Esta es una pregunta de cierre. Si no tenés nada más para agregar, podés marcarla como completada sin responder.</p>
+        <div class="actions">
+          <button id="completeClosingBtn" class="btn" type="button">No tengo nada más para agregar</button>
+        </div>
+      </div>
+
       <div id="saveStatus" class="status" role="status"></div>
       </div>
       <section class="communication-hub">
@@ -1466,10 +1474,11 @@
       QUESTIONS.forEach((item,index)=>{
         const answered=Boolean(state.saved[index]);
         const followup=Boolean(state.pendingFollowUps[index]);
+        const completedWithoutAnswer=Boolean(state.drafts[index]?.completedWithoutAnswer);
         const button=document.createElement("button");button.type="button";
         button.className=`question-jump ${followup?"followup":answered?"done":""} ${index===state.index?"current":""}`.trim();
         button.textContent=followup?`! ${index+1}`:answered?`✓ ${index+1}`:`○ ${index+1}`;
-        button.title=`Pregunta ${index+1}: ${followup?"requiere ampliación":answered?"respondida":"pendiente"}`;
+        button.title=`Pregunta ${index+1}: ${followup?"requiere ampliación":completedWithoutAnswer?"completada sin respuesta adicional":answered?"respondida":"pendiente"}`;
         button.onclick=()=>{if(index===state.index||!canChangeQuestion())return;preserveCurrentDraft();state.index=index;saveLocal();render()};
         map.appendChild(button);
       });
@@ -1504,17 +1513,33 @@
       }
       const isSaved=Boolean(state.saved[state.index]);
       const requiresFollowUp=Boolean(state.pendingFollowUps[state.index]);
+      const isClosingQuestion=state.index===QUESTIONS.length-1;
+      const completedWithoutAnswer=Boolean(state.drafts[state.index]?.completedWithoutAnswer);
       const status=$("currentQuestionStatus");
       status.className=`answer-status ${requiresFollowUp?"followup":isSaved?"done":"pending"}`;
-      status.textContent=requiresFollowUp?"! Requiere ampliación":isSaved?"✓ Respondida":"○ Pendiente";
+      status.textContent=requiresFollowUp
+        ?"! Requiere ampliación"
+        :completedWithoutAnswer
+        ?"✓ Completada"
+        :isSaved
+        ?"✓ Respondida"
+        :"○ Pendiente";
       $("savedAnswerStatus").className=`answer-status ${requiresFollowUp?"followup":"done"}`;
-      $("savedAnswerStatus").textContent=requiresFollowUp?"Requiere ampliación":"Respondida";
+      $("savedAnswerStatus").textContent=requiresFollowUp
+        ?"Requiere ampliación"
+        :completedWithoutAnswer
+        ?"Completada"
+        :"Respondida";
       $("savedAnswerBox").classList.toggle("hide",!isSaved);
       $("responseEditor").classList.toggle("hide",isSaved&&!state.adding);
+      $("closingNoMoreBox").classList.toggle("hide",!isClosingQuestion||isSaved||state.adding);
       $("cancelReplacementBtn").classList.toggle("hide",!state.adding);
       $("saveBtn").textContent=state.adding?"Guardar ampliación en Drive":"Guardar respuesta en Drive";
+      $("replaceAnswerBtn").textContent=completedWithoutAnswer?"Agregar una respuesta":"Ampliar respuesta";
       $("savedAnswerText").textContent=isSaved
-        ? (draft?.transcript||"El audio fue guardado correctamente. La transcripción será incorporada posteriormente por la investigadora.")
+        ? (completedWithoutAnswer
+          ?"La pregunta de cierre fue completada sin respuesta adicional."
+          :(draft?.transcript||"El audio fue guardado correctamente. La transcripción será incorporada posteriormente por la investigadora."))
         : "";
       const savedAudioFile=draft?.audioFileName||"";
       $("savedAnswerAudioBox").classList.toggle("hide",!isSaved||!savedAudioFile);
@@ -1525,8 +1550,10 @@
       $("listenSavedAnswerBtn").onclick=()=>loadRemoteAudio(
         savedAudioFile,$("savedAnswerAudio"),$("savedAnswerAudioStatus")
       );
-      $("editTranscriptBtn").disabled=!Boolean(draft?.transcript?.trim());
-      $("editTranscriptBtn").title=draft?.transcript?.trim()
+      $("editTranscriptBtn").disabled=completedWithoutAnswer||!Boolean(draft?.transcript?.trim());
+      $("editTranscriptBtn").title=completedWithoutAnswer
+        ?"No hay una transcripción para corregir."
+        :draft?.transcript?.trim()
         ?"Corregir la transcripción disponible"
         :"La transcripción todavía está pendiente";
       $("editTranscriptBox").classList.add("hide");state.editingTranscript=false;
@@ -2034,7 +2061,7 @@
         if(isAddition){
           const stamp=new Date().toLocaleString("es-AR");
           const addition=payload.transcript||"[Ampliación guardada sin transcripción textual]";
-          state.drafts[state.index]={transcript:`${previousTranscript}\n\nAmpliación (${stamp}):\n${addition}`.trim(),audioBlob:null,transcriptionReady:false,materialFiles:[]};
+          state.drafts[state.index]={transcript:`${previousTranscript}\n\nAmpliación (${stamp}):\n${addition}`.trim(),audioBlob:null,transcriptionReady:false,materialFiles:[],completedWithoutAnswer:false};
           state.adding=false;
           state.pendingFollowUps[state.index]=false;
         }else{
@@ -2044,6 +2071,46 @@
         state.saved[state.index]=true;delete state.savedBackups[state.index];saveLocal();render();
       }catch(error){setStatus($("saveStatus"),error.message,"bad")}finally{$("saveBtn").disabled=false}
     }
+
+    async function completeClosingWithoutAnswer(){
+      if(state.index!==QUESTIONS.length-1)return;
+      if(state.audioBlob||state.materialFiles.length){
+        setStatus(
+          $("saveStatus"),
+          "Antes de marcar el cierre como completado, guardá o descartá el audio y los materiales seleccionados.",
+          "bad"
+        );
+        return;
+      }
+
+      $("completeClosingBtn").disabled=true;
+      setStatus($("saveStatus"),"Guardando el cierre…");
+      try{
+        await callServer("guardarCierreSinRespuesta",{
+          accessCode:$("accessCode").value.trim(),
+          sessionId:state.sessionId
+        });
+        state.saved[state.index]=true;
+        state.drafts[state.index]={
+          transcript:"",
+          audioBlob:null,
+          audioFileName:"",
+          transcriptionReady:false,
+          materialFiles:[],
+          completedWithoutAnswer:true
+        };
+        state.editableTranscripts[state.index]="";
+        delete state.savedBackups[state.index];
+        saveLocal();
+        render();
+        setStatus($("saveStatus"),"Pregunta de cierre completada sin respuesta adicional.","ok");
+      }catch(error){
+        setStatus($("saveStatus"),error.message,"bad");
+      }finally{
+        $("completeClosingBtn").disabled=false;
+      }
+    }
+
     function fillMessageQuestionSelect(select){
       select.innerHTML='<option value="0">Mensaje general</option>';
       QUESTIONS.forEach((item,index)=>{
@@ -2745,7 +2812,7 @@
     $("addTeachingSpaceBtn").onclick=()=>createTeachingSpace();
     $("otherPostgradCompleted").onchange=updatePostgradTrainingUI;
     document.querySelectorAll("#postgradChoices input").forEach(input=>input.onchange=updatePostgradTrainingUI);
-    $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("discardAudioBtn").onclick=discardCurrentAudio;$("saveBtn").onclick=saveAnswer;$("saveMaterialsBtn").onclick=saveMaterialsIndependently;$("finishBtn").onclick=finish;
+    $("startBtn").onclick=startInterview;$("resumeBtn").onclick=resumeInterview;$("recordBtn").onclick=startRecording;$("stopBtn").onclick=stopRecording;$("discardAudioBtn").onclick=discardCurrentAudio;$("saveBtn").onclick=saveAnswer;$("completeClosingBtn").onclick=completeClosingWithoutAnswer;$("saveMaterialsBtn").onclick=saveMaterialsIndependently;$("finishBtn").onclick=finish;
     $("viewTranscriptBtn").onclick=viewTranscript;
     $("editDataBtn").onclick=editInitialData;$("saveDataBtn").onclick=saveInitialData;$("cancelDataBtn").onclick=cancelDataEdit;
     $("replaceAnswerBtn").onclick=startAnswerReplacement;
