@@ -484,7 +484,7 @@
           <div class="material-inline">
             <label class="btn material-inline-btn" title="Adjuntar materiales vinculados con esta pregunta">
               ＋ Adjuntar material
-              <input id="materialFiles" class="hide" type="file" multiple accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.jpg,.jpeg,.png">
+              <input id="materialFiles" class="hide" type="file" multiple>
             </label>
             <button id="saveMaterialsBtn" class="btn material-inline-btn hide" type="button" disabled>Guardar materiales</button>
             <span id="materialInlineSummary" class="helper"></span>
@@ -519,22 +519,27 @@
 
     <section id="finishCard" class="card hide">
       <div class="transcript-head"><h2>Finalización</h2></div>
-      <p>¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?</p>
-      <div id="finalQuestionAudioBox" class="question-audio hide"><button id="listenFinalQuestionBtn" class="btn" type="button">▶ Escuchar pregunta final</button><audio id="finalQuestionAudioPlayer" class="hide" controls></audio><div id="finalQuestionAudioStatus" class="status"></div></div>
-      <div class="actions">
-        <button id="finishRecordBtn" class="btn primary">Grabar respuesta final</button>
-        <button id="finishStopBtn" class="btn danger" disabled>Detener</button>
-        <button id="finishDiscardBtn" class="btn danger hide">Descartar grabación</button>
-      </div>
-      <div id="finishRecordStatus" class="status"></div>
-      <audio id="finishPreview" class="hide" controls></audio>
-      <label>Respuesta final<textarea id="finalAnswer"></textarea></label>
+      <p>Ya recorriste las 18 preguntas. Antes de finalizar, podés volver a las preguntas para revisar, ampliar o adjuntar materiales si lo necesitás.</p>
+
       <label class="consent"><input id="followUp" type="checkbox"><span>Acepto ser contactada nuevamente para aclarar o ampliar aspectos de la entrevista.</span></label>
+
       <div class="actions">
         <button id="backToQuestionsBtn" class="btn">Volver a las preguntas</button>
         <button id="finishBtn" class="btn primary">Finalizar y guardar en Drive</button>
       </div>
       <div id="finishStatus" class="status" role="status"></div>
+
+      <!-- Controles antiguos conservados ocultos para compatibilidad interna.
+           La pregunta 18 se responde ahora con el mismo circuito que las preguntas 1 a 17. -->
+      <div class="hide" aria-hidden="true">
+        <div id="finalQuestionAudioBox"><button id="listenFinalQuestionBtn" type="button"></button><audio id="finalQuestionAudioPlayer"></audio><div id="finalQuestionAudioStatus"></div></div>
+        <button id="finishRecordBtn" type="button"></button>
+        <button id="finishStopBtn" type="button"></button>
+        <button id="finishDiscardBtn" type="button"></button>
+        <div id="finishRecordStatus"></div>
+        <audio id="finishPreview"></audio>
+        <textarea id="finalAnswer"></textarea>
+      </div>
     </section>
     <section id="transcriptCard" class="card transcript-view hide">
       <div class="transcript-head">
@@ -673,7 +678,8 @@
       {b:"Bloque 6 · Modalidades de enseñanza",q:"¿Qué relación encontrás entre la modalidad de cursada y la manera en que incorporaste IA generativa en la propuesta?",p:["¿La modalidad presencial, virtual o bimodal modificó las formas de orientar y acompañar a los estudiantes?","¿Cómo incidió en la comunicación y en la interacción?","¿Qué posibilidades o dificultades aparecieron en relación con los tiempos de trabajo?","¿Cómo influyó en el acceso a los sistemas de IA?","¿La modalidad modificó las posibilidades de seguir el proceso realizado por los estudiantes?","¿Incidió en las decisiones de evaluación o en las evidencias solicitadas para reconocer el aprendizaje?","Si tenés experiencia en más de una modalidad, ¿qué diferencias y continuidades observás?"]},
       {b:"Bloque 7 · Particularidades del campo disciplinar",q:"¿Qué relación encontrás entre la incorporación de IA generativa y las características del campo disciplinar en el que enseñás?",p:["¿Considerás que las características de la disciplina influyeron en la manera de incorporar IA generativa? ¿De qué forma?","¿Qué saberes disciplinares necesitaron los estudiantes para trabajar con las respuestas o producciones generadas?","¿Qué posibilidades encontraste para la enseñanza de los contenidos de tu campo?","¿Qué dificultades, límites o precauciones identificaste?","¿Aparecieron cuestiones propias de la disciplina que fue necesario abordar?","¿Considerás que esta experiencia podría desarrollarse de la misma manera en otro campo disciplinar? ¿Por qué?"]},
       {b:"Bloque 8 · Consignas y materiales de enseñanza",q:"En relación con la experiencia que relataste, ¿elaboraste o utilizaste alguna consigna, orientación de actividad, trabajo práctico u otro material vinculado con el uso de IA generativa?",p:["¿De qué tipo de material se trata?","¿Con qué propósito lo elaboraste o seleccionaste?","¿Qué orientaciones ofrecía a los estudiantes?","¿Qué esperabas que hicieran a partir de ese material?","¿Incluía criterios de evaluación o pautas relacionadas con el uso de IA generativa?","¿Realizaste modificaciones durante el desarrollo de la actividad?"]},
-      {b:"Bloque 8 · Consignas y materiales de enseñanza",q:"¿Podrías buscar ese material y enviármelo para incorporarlo al análisis documental de la investigación?",p:["Una vez localizado: ¿qué aspectos del material considerás más importantes?","¿Qué decisiones vinculadas con la IA generativa pueden reconocerse en él?","¿Cómo se relaciona lo planteado en el documento con lo que ocurrió durante la actividad?","¿Realizaste ajustes o brindaste orientaciones adicionales que no hayan quedado registrados?","Si volvieras a utilizar el material, ¿qué modificarías? ¿Por qué?"]}
+      {b:"Bloque 8 · Consignas y materiales de enseñanza",q:"¿Podrías buscar ese material y enviármelo para incorporarlo al análisis documental de la investigación?",p:["Una vez localizado: ¿qué aspectos del material considerás más importantes?","¿Qué decisiones vinculadas con la IA generativa pueden reconocerse en él?","¿Cómo se relaciona lo planteado en el documento con lo que ocurrió durante la actividad?","¿Realizaste ajustes o brindaste orientaciones adicionales que no hayan quedado registrados?","Si volvieras a utilizar el material, ¿qué modificarías? ¿Por qué?"]},
+      {b:"Cierre",q:"¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?",p:[]}
     ];
 
     const CAREERS = {
@@ -2310,27 +2316,25 @@
     }
 
     async function finish(){
-      if(state.finalRecorder?.state==="recording"){setStatus($("finishStatus"),"Detené la grabación final antes de finalizar la entrevista.","bad");return}
-      $("finishBtn").disabled=true;setStatus($("finishStatus"),"Finalizando la entrevista…");
+      $("finishBtn").disabled=true;
+      setStatus($("finishStatus"),"Finalizando la entrevista…");
       try{
-        const finalPayload={accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,questionNumber:18,block:"Cierre",questionText:"¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?",transcript:$("finalAnswer").value.trim(),notes:"",audioBase64:"",mimeType:state.finalAudioBlob?.type||""};
-        if(state.finalAudioBlob){
-          const base64=await blobToBase64(state.finalAudioBlob);
-          const chunkSize=300000;
-          const totalChunks=Math.ceil(base64.length/chunkSize);
-          const uploadId=`cierre_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-          for(let index=0;index<totalChunks;index++){
-            setStatus($("finishStatus"),`Guardando el audio final: ${Math.round((index/totalChunks)*100)} %`);
-            await callServer("guardarFragmentoAudio",{accessCode:finalPayload.accessCode,sessionId:state.sessionId,uploadId,chunkIndex:index,chunk:base64.slice(index*chunkSize,(index+1)*chunkSize)});
-          }
-          await callServer("guardarRespuestaConFragmentos",Object.assign({},finalPayload,{uploadId,totalChunks}));
-        }else if(finalPayload.transcript){
-          await callServer("guardarRespuesta",finalPayload);
-        }
-        const result=await callServer("finalizarEntrevista",{accessCode:$("accessCode").value.trim(),sessionId:state.sessionId,acceptsFollowUp:$("followUp").checked,materialCommitment:""});
-        setStatus($("finishStatus"),`Entrevista finalizada. Los archivos quedaron guardados en la carpeta “${result.folderName}”.`,"ok");
+        const result=await callServer("finalizarEntrevista",{
+          accessCode:$("accessCode").value.trim(),
+          sessionId:state.sessionId,
+          acceptsFollowUp:$("followUp").checked,
+          materialCommitment:""
+        });
+        setStatus(
+          $("finishStatus"),
+          `Entrevista finalizada. Los archivos quedaron guardados en la carpeta “${result.folderName}”.`,
+          "ok"
+        );
         localStorage.removeItem(localKey);
-      }catch(error){setStatus($("finishStatus"),error.message,"bad");$("finishBtn").disabled=false}
+      }catch(error){
+        setStatus($("finishStatus"),error.message,"bad");
+        $("finishBtn").disabled=false;
+      }
     }
 
     function floatTo16BitPCM(float32){
@@ -2503,13 +2507,11 @@
     function fillAdminQuestionSelect(select,includeFinal=false){
       select.innerHTML="";
       QUESTIONS.forEach((item,index)=>{const option=document.createElement("option");option.value=String(index+1);option.textContent=`${index+1}. ${item.q}`;select.appendChild(option)});
-      if(includeFinal){const finalOption=document.createElement("option");finalOption.value="18";finalOption.textContent="18. ¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?";select.appendChild(finalOption)}
+      if(includeFinal&&QUESTIONS.length<18){const finalOption=document.createElement("option");finalOption.value="18";finalOption.textContent="18. ¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?";select.appendChild(finalOption)}
     }
     function syncAdminQuestionText(){
       const index=Number($("adminQuestionAudioSelect").value)-1;
-      $("adminQuestionAudioText").textContent=index===17
-        ?"¿Hay algún aspecto de tu experiencia de enseñanza con IA generativa que consideres importante y que no hayamos abordado?"
-        :(QUESTIONS[index]?.q||"");
+      $("adminQuestionAudioText").textContent=QUESTIONS[index]?.q||"";
     }
     async function adminRefresh(){
       setStatus($("adminStatus"),"Actualizando entrevistas…");
