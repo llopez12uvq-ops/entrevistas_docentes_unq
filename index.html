@@ -657,6 +657,31 @@
               Publicar o actualizar transcripción
             </button>
           </div>
+
+          <hr style="margin:22px 0;border:0;border-top:1px solid var(--line)">
+          <h4 style="margin:0 0 8px;color:var(--navy)">Estado de la pregunta</h4>
+          <p class="helper">
+            Este control sirve para registrar manualmente que una pregunta fue completada
+            cuando el cumplimiento no queda representado por una respuesta oral o textual.
+            El cambio queda registrado como una decisión de la investigadora.
+          </p>
+          <div class="admin-grid">
+            <label>Pregunta
+              <select id="adminCompletionQuestion"></select>
+            </label>
+            <label>Motivo opcional
+              <input id="adminCompletionReason" placeholder="Ej.: material solicitado enviado">
+            </label>
+          </div>
+          <div class="actions">
+            <button id="adminMarkCompletedBtn" class="btn primary" type="button" disabled>
+              ✓ Marcar como completada
+            </button>
+            <button id="adminReopenQuestionBtn" class="btn danger" type="button" disabled>
+              Reabrir
+            </button>
+          </div>
+          <div id="adminCompletionStatus" class="status" role="status"></div>
         </section>
       </div>
       <div id="adminStatus" class="status" role="status"></div>
@@ -2456,6 +2481,102 @@
       onProgress?.(100);
       return new Blob(chunks,{type:"audio/mpeg"});
     }
+
+    function fillAdminCompletionQuestionSelect(){
+      const select=$("adminCompletionQuestion");
+      if(!select)return;
+      const current=select.value;
+      select.innerHTML="";
+      QUESTIONS.forEach((item,index)=>{
+        const option=document.createElement("option");
+        option.value=String(index+1);
+        option.textContent=`${index+1}. ${item.q}`;
+        select.appendChild(option);
+      });
+      if(current)select.value=current;
+    }
+
+    function adminCompletionStateFor(questionNumber){
+      return state.adminMediaData?.questionCompletionStates?.[questionNumber] || null;
+    }
+
+    function adminCompletionHasMaterials(questionNumber){
+      return Boolean(state.adminMediaData?.questionsWithMaterials?.[questionNumber]);
+    }
+
+    function adminCompletionHasResponse(questionNumber){
+      return (state.adminMediaData?.records||[]).some(record =>
+        Number(record.questionNumber)===Number(questionNumber) && !record.isAddition
+      );
+    }
+
+    function renderAdminCompletionState(){
+      const interview=$("adminMediaInterview").value;
+      const questionNumber=Number($("adminCompletionQuestion").value||0);
+      const manual=adminCompletionStateFor(questionNumber);
+      const hasMaterials=adminCompletionHasMaterials(questionNumber);
+      const hasResponse=adminCompletionHasResponse(questionNumber);
+
+      $("adminMarkCompletedBtn").disabled=!interview || Boolean(manual?.completedByResearcher);
+      $("adminReopenQuestionBtn").disabled=!interview || !manual?.completedByResearcher;
+
+      if(!interview){
+        setStatus($("adminCompletionStatus"),"Seleccioná una entrevista.");
+        return;
+      }
+
+      const details=[];
+      if(hasResponse)details.push("hay una respuesta guardada");
+      if(hasMaterials)details.push("hay materiales enviados");
+      if(manual?.completedByResearcher){
+        details.push(`marcada como completada por la investigadora${manual.completedAt?` el ${new Date(manual.completedAt).toLocaleString()}`:""}`);
+      }
+
+      setStatus(
+        $("adminCompletionStatus"),
+        details.length
+          ? `Pregunta ${questionNumber}: ${details.join("; ")}.`
+          : `Pregunta ${questionNumber}: no hay respuesta, materiales ni estado manual registrado.`,
+        manual?.completedByResearcher ? "ok" : ""
+      );
+    }
+
+    async function adminSetQuestionCompletion(complete){
+      const participantCode=$("adminMediaInterview").value;
+      const questionNumber=Number($("adminCompletionQuestion").value||0);
+      if(!participantCode||!questionNumber)return;
+
+      const button=complete?$("adminMarkCompletedBtn"):$("adminReopenQuestionBtn");
+      button.disabled=true;
+      setStatus(
+        $("adminCompletionStatus"),
+        complete?"Registrando el estado…":"Reabriendo la pregunta…"
+      );
+
+      try{
+        await callServer("adminEstablecerEstadoPregunta",Object.assign(adminAuth(),{
+          participantCode,
+          questionNumber,
+          complete,
+          reason:$("adminCompletionReason").value.trim()
+        }));
+        await adminMediaLoadInterview();
+        $("adminCompletionQuestion").value=String(questionNumber);
+        renderAdminCompletionState();
+        setStatus(
+          $("adminCompletionStatus"),
+          complete
+            ?`Pregunta ${questionNumber}: ✓ completada por la investigadora.`
+            :`Pregunta ${questionNumber}: se eliminó la marca manual de completada.`,
+          "ok"
+        );
+      }catch(error){
+        setStatus($("adminCompletionStatus"),error.message,"bad");
+      }finally{
+        renderAdminCompletionState();
+      }
+    }
+
     function selectedAdminMediaRecord(){
       const fileName=$("adminMediaRecord").value;
       return (state.adminMediaData?.records||[]).find(item=>item.recordFileName===fileName)||null;
@@ -2484,11 +2605,17 @@
     async function adminMediaLoadInterview(){
       const participantCode=$("adminMediaInterview").value;
       state.adminMediaData=null;
-      if(!participantCode){populateAdminMediaRecords();return}
+      if(!participantCode){
+        populateAdminMediaRecords();
+        renderAdminCompletionState();
+        return;
+      }
       setStatus($("adminMediaStatus"),"Cargando respuestas…");
       try{
         state.adminMediaData=await callServer("adminObtenerEntrevista",Object.assign(adminAuth(),{participantCode}));
         populateAdminMediaRecords();
+        fillAdminCompletionQuestionSelect();
+        renderAdminCompletionState();
       }catch(error){setStatus($("adminMediaStatus"),error.message,"bad")}
     }
     function adminMediaSelectRecord(){
@@ -2509,6 +2636,10 @@
           ? (record.transcript?"Transcripción disponible. Podés revisarla o reemplazarla.":"Esta respuesta todavía no tiene transcripción.")
           : ""
       );
+      if(record?.questionNumber){
+        $("adminCompletionQuestion").value=String(record.questionNumber);
+      }
+      renderAdminCompletionState();
     }
     async function adminMediaListen(){
       const record=selectedAdminMediaRecord();
@@ -2868,6 +2999,10 @@
     $("adminMediaListenBtn").onclick=adminMediaListen;
     $("adminMediaMp3Btn").onclick=adminMediaSaveMp3;
     $("adminMediaSaveTranscriptBtn").onclick=adminMediaSaveTranscript;
+    fillAdminCompletionQuestionSelect();
+    $("adminCompletionQuestion").onchange=renderAdminCompletionState;
+    $("adminMarkCompletedBtn").onclick=()=>adminSetQuestionCompletion(true);
+    $("adminReopenQuestionBtn").onclick=()=>adminSetQuestionCompletion(false);
     $("participantMessageRecordBtn").onclick=startParticipantMessageRecording;
     $("participantMessageStopBtn").onclick=stopParticipantMessageRecording;
     $("participantMessageDiscardBtn").onclick=discardParticipantMessageAudio;
