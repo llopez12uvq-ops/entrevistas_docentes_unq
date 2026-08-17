@@ -841,7 +841,7 @@
         .replace(/"/g,"&quot;")
         .replace(/'/g,"&#039;");
     }
-    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},editableTranscripts:{},pendingFollowUps:{},savedBackups:{},adding:false,editingTranscript:false,materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false,interactions:[],questionAudio:{},personalGreeting:"",adminQuestionBlob:null,adminInterventionBlob:null,adminRecorder:null,adminChunks:[],adminData:null,participantMessages:[],participantMessageBlob:null,participantMessageRecorder:null,participantMessageChunks:[],adminMessages:[],adminMessageBlob:null,participantMessageRefreshTimer:null,participantMaterials:[]};
+    const state={index:0,sessionId:"",audioBlob:null,audioUrl:"",recorder:null,chunks:[],recognition:null,saved:{},drafts:{},editableTranscripts:{},pendingFollowUps:{},savedBackups:{},adding:false,editingTranscript:false,materialFiles:[],transcribing:false,transcriptionReady:false,finalAudioBlob:null,finalAudioUrl:"",finalRecorder:null,finalRecognition:null,finalTranscribing:false,finalTranscriptionReady:false,interactions:[],questionAudio:{},personalGreeting:"",adminQuestionBlob:null,adminInterventionBlob:null,adminRecorder:null,adminChunks:[],adminData:null,participantMessages:[],participantMessageBlob:null,participantMessageRecorder:null,participantMessageChunks:[],adminMessages:[],adminMessageBlob:null,participantMessageRefreshTimer:null,participantMaterials:[],adminInterviewCache:{}};
     const localKey="entrevista-docente-unq-v2";
     let whisperWorker=null;
     let whisperRequest=0;
@@ -885,12 +885,12 @@
           let completed=false;
           window[callback]=response=>{
             completed=true;delete window[callback];script.remove();
-            if(!response.done){setTimeout(check,1000);return}
+            if(!response.done){setTimeout(check,400);return}
             response.ok?resolve(response.result):reject(new Error(response.error||"No se pudo completar la solicitud."));
           };
           script.onerror=()=>{
             if(completed)return;
-            delete window[callback];script.remove();setTimeout(check,1500);
+            delete window[callback];script.remove();setTimeout(check,250);
           };
           const query=new URLSearchParams({action:"status",requestId,callback,ts:String(Date.now())});
           script.src=`${API_URL}?${query}`;document.body.appendChild(script);
@@ -1434,22 +1434,93 @@
       for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
       return new Blob([bytes],{type:mimeType||"audio/webm"});
     }
+    function fetchFastAudioChunk(token,index){
+      return new Promise((resolve,reject)=>{
+        const callback=`audio_${token}_${index}_${Math.random().toString(36).slice(2)}`.replace(/[^a-zA-Z0-9_$]/g,"");
+        const script=document.createElement("script");
+        let finished=false;
+        const timeout=setTimeout(()=>{
+          if(finished)return;
+          finished=true;
+          delete window[callback];
+          script.remove();
+          reject(new Error("La carga del audio está demorando demasiado."));
+        },30000);
+        window[callback]=response=>{
+          if(finished)return;
+          finished=true;
+          clearTimeout(timeout);
+          delete window[callback];
+          script.remove();
+          response?.ok?resolve(response.chunk||""):reject(new Error(response?.error||"No se pudo cargar el audio."));
+        };
+        script.onerror=()=>{
+          if(finished)return;
+          finished=true;
+          clearTimeout(timeout);
+          delete window[callback];
+          script.remove();
+          reject(new Error("No se pudo descargar un fragmento del audio."));
+        };
+        const query=new URLSearchParams({
+          action:"audioChunk",token,index:String(index),callback,ts:String(Date.now())
+        });
+        script.src=`${API_URL}?${query}`;
+        document.body.appendChild(script);
+      });
+    }
+
     async function fetchRemoteAudioBlob(fileName,adminCode="",participantCode=""){
       const auth=adminCode
         ? {adminCode,participantCode}
         : {sessionId:state.sessionId};
       const info=await callServer("obtenerAudioInfo",Object.assign({fileName},auth));
-      const total=Math.ceil(info.base64Length/info.chunkSize);
       let base64="";
-      for(let chunkIndex=0;chunkIndex<total;chunkIndex++){
-        const part=await callServer("obtenerAudioFragmento",Object.assign({fileName,chunkIndex},auth));
-        base64+=part.chunk;
+
+      if(info.fastChunks&&info.audioToken&&info.totalChunks){
+        try{
+          const chunks=new Array(info.totalChunks);
+          let nextIndex=0;
+          const worker=async()=>{
+            while(true){
+              const index=nextIndex++;
+              if(index>=info.totalChunks)return;
+              chunks[index]=await fetchFastAudioChunk(info.audioToken,index);
+            }
+          };
+          const workers=Array.from({length:Math.min(6,info.totalChunks)},()=>worker());
+          await Promise.all(workers);
+          base64=chunks.join("");
+        }catch(fastError){
+          // Respaldo automático: si CacheService expulsó un fragmento, se usa
+          // el mecanismo compatible sin perder el acceso al audio.
+          const chunks=[];
+          for(let chunkIndex=0;chunkIndex<info.totalChunks;chunkIndex++){
+            const part=await callServer("obtenerAudioFragmento",Object.assign({
+              fileName,chunkIndex,chunkSize:info.chunkSize,audioToken:info.audioToken
+            },auth));
+            chunks.push(part.chunk);
+          }
+          base64=chunks.join("");
+        }
+      }else{
+        const total=Math.ceil(info.base64Length/info.chunkSize);
+        const chunks=[];
+        for(let chunkIndex=0;chunkIndex<total;chunkIndex++){
+          const part=await callServer("obtenerAudioFragmento",Object.assign({
+            fileName,chunkIndex,chunkSize:info.chunkSize,audioToken:info.audioToken||""
+          },auth));
+          chunks.push(part.chunk);
+        }
+        base64=chunks.join("");
       }
+
       return {
         blob:base64ToBlob(base64,info.mimeType),
         mimeType:info.mimeType||"audio/webm"
       };
     }
+
     async function loadRemoteAudio(fileName,audioElement,statusElement,adminCode="",participantCode=""){
       if(!fileName)return;
       setStatus(statusElement,"Cargando audio…");
@@ -2343,7 +2414,7 @@
     }
     async function uploadParticipantMessageAudio(blob,extra){
       const base64=await blobToBase64(blob);
-      const chunkSize=45000;
+      const chunkSize=300000;
       const totalChunks=Math.ceil(base64.length/chunkSize);
       const uploadId=`mensaje_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       for(let index=0;index<totalChunks;index++){
@@ -2560,6 +2631,7 @@
           complete,
           reason:$("adminCompletionReason").value.trim()
         }));
+        invalidateAdminInterviewCache(participantCode);
         await adminMediaLoadInterview();
         $("adminCompletionQuestion").value=String(questionNumber);
         renderAdminCompletionState();
@@ -2602,6 +2674,17 @@
       $("adminMediaAudio").removeAttribute("src");
       setStatus($("adminMediaStatus"),records.length?"Seleccioná una respuesta.":"La entrevista no tiene respuestas guardadas.");
     }
+    function invalidateAdminInterviewCache(participantCode){
+      if(!participantCode)return;
+      delete state.adminInterviewCache[participantCode];
+    }
+    async function getAdminInterviewData(participantCode,force=false){
+      const cached=state.adminInterviewCache[participantCode];
+      if(!force&&cached&&Date.now()-cached.savedAt<60000)return cached.data;
+      const data=await callServer("adminObtenerEntrevista",Object.assign(adminAuth(),{participantCode}));
+      state.adminInterviewCache[participantCode]={data,savedAt:Date.now()};
+      return data;
+    }
     async function adminMediaLoadInterview(){
       const participantCode=$("adminMediaInterview").value;
       state.adminMediaData=null;
@@ -2612,7 +2695,7 @@
       }
       setStatus($("adminMediaStatus"),"Cargando respuestas…");
       try{
-        state.adminMediaData=await callServer("adminObtenerEntrevista",Object.assign(adminAuth(),{participantCode}));
+        state.adminMediaData=await getAdminInterviewData(participantCode);
         populateAdminMediaRecords();
         fillAdminCompletionQuestionSelect();
         renderAdminCompletionState();
@@ -2654,7 +2737,7 @@
     }
     async function uploadAdminGeneratedMp3(blob,participantCode,recordFileName,sourceAudioFileName){
       const base64=await blobToBase64(blob);
-      const chunkSize=45000;
+      const chunkSize=300000;
       const totalChunks=Math.ceil(base64.length/chunkSize);
       const uploadId=`mp3_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       for(let index=0;index<totalChunks;index++){
@@ -2686,6 +2769,7 @@
         const result=await uploadAdminGeneratedMp3(
           mp3,participantCode,record.recordFileName,record.audioFileName
         );
+        invalidateAdminInterviewCache(participantCode);
         await adminMediaLoadInterview();
         $("adminMediaRecord").value=record.recordFileName;
         adminMediaSelectRecord();
@@ -2707,11 +2791,13 @@
       $("adminMediaSaveTranscriptBtn").disabled=true;
       setStatus($("adminMediaStatus"),"Publicando la transcripción…");
       try{
+        const participantCode=$("adminMediaInterview").value;
         await callServer("adminGuardarTranscripcion",Object.assign(adminAuth(),{
-          participantCode:$("adminMediaInterview").value,
+          participantCode,
           recordFileName:record.recordFileName,
           transcript
         }));
+        invalidateAdminInterviewCache(participantCode);
         await adminMediaLoadInterview();
         $("adminMediaRecord").value=record.recordFileName;
         adminMediaSelectRecord();
@@ -2733,6 +2819,7 @@
       $("adminQuestionAudioText").textContent=QUESTIONS[index]?.q||"";
     }
     async function adminRefresh(){
+      state.adminInterviewCache={};
       setStatus($("adminStatus"),"Actualizando entrevistas…");
       try{
         const result=await callServer("adminListarEntrevistas",adminAuth());
@@ -2792,7 +2879,7 @@
       if(isQuestion)$("adminQuestionSaveBtn").disabled=true;
     }
     async function uploadAdminAudio(blob,finishAction,extra){
-      const base64=await blobToBase64(blob);const chunkSize=45000;const totalChunks=Math.ceil(base64.length/chunkSize);const uploadId=`admin_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const base64=await blobToBase64(blob);const chunkSize=300000;const totalChunks=Math.ceil(base64.length/chunkSize);const uploadId=`admin_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       for(let index=0;index<totalChunks;index++)await callServer("guardarFragmentoAdmin",Object.assign(adminAuth(),{uploadId,chunkIndex:index,chunk:base64.slice(index*chunkSize,(index+1)*chunkSize)}));
       return callServer(finishAction,Object.assign(adminAuth(),extra,{uploadId,totalChunks,mimeType:blob.type||"audio/webm"}));
     }
@@ -2811,7 +2898,7 @@
     }
     async function adminLoadInterview(){
       const participantCode=$("adminThreadInterview").value;if(!participantCode){state.adminData=null;renderAdminConversation();return}
-      try{state.adminData=await callServer("adminObtenerEntrevista",Object.assign(adminAuth(),{participantCode}));renderAdminConversation()}
+      try{state.adminData=await getAdminInterviewData(participantCode);renderAdminConversation()}
       catch(error){setStatus($("adminStatus"),error.message,"bad")}
     }
     async function adminSaveIntervention(){
@@ -2823,6 +2910,7 @@
         if(state.adminInterventionBlob)await uploadAdminAudio(state.adminInterventionBlob,"guardarIntervencionAdminConFragmentos",extra);
         else await callServer("guardarIntervencionAdmin",Object.assign(adminAuth(),extra));
         $("adminInterventionText").value="";$("adminRequiresResponse").checked=false;discardAdminAudio("intervention");
+        invalidateAdminInterviewCache(participantCode);
         await adminLoadInterview();setStatus($("adminStatus"),"La intervención quedó visible únicamente en esta entrevista.","ok");
       }catch(error){setStatus($("adminStatus"),error.message,"bad")}
     }
