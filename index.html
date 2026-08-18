@@ -873,6 +873,33 @@
       return waitForServer(requestId)
         .finally(()=>setTimeout(()=>frame.remove(),1000));
     }
+    function fetchServerResponseChunk(requestId,index){
+      return new Promise((resolve,reject)=>{
+        const callback=`rsp_${requestId}_${index}_${Math.random().toString(36).slice(2)}`.replace(/[^a-zA-Z0-9_$]/g,"");
+        const script=document.createElement("script");
+        let finished=false;
+        const timeout=setTimeout(()=>{
+          if(finished)return;
+          finished=true;delete window[callback];script.remove();
+          reject(new Error("La respuesta del servidor está demorando demasiado."));
+        },30000);
+        window[callback]=response=>{
+          if(finished)return;
+          finished=true;clearTimeout(timeout);delete window[callback];script.remove();
+          response?.ok?resolve(response.chunk||""):reject(new Error(response?.error||"No se pudo recuperar la respuesta."));
+        };
+        script.onerror=()=>{
+          if(finished)return;
+          finished=true;clearTimeout(timeout);delete window[callback];script.remove();
+          reject(new Error("No se pudo recuperar un fragmento de la respuesta."));
+        };
+        const query=new URLSearchParams({
+          action:"statusChunk",requestId,index:String(index),callback,ts:String(Date.now())
+        });
+        script.src=`${API_URL}?${query}`;document.body.appendChild(script);
+      });
+    }
+
     function waitForServer(requestId){
       return new Promise((resolve,reject)=>{
         const started=Date.now();
@@ -883,10 +910,32 @@
           const callback=`cb_${requestId.replace(/[^a-zA-Z0-9_]/g,"")}`;
           const script=document.createElement("script");
           let completed=false;
-          window[callback]=response=>{
+          window[callback]=async response=>{
             completed=true;delete window[callback];script.remove();
             if(!response.done){setTimeout(check,400);return}
-            response.ok?resolve(response.result):reject(new Error(response.error||"No se pudo completar la solicitud."));
+            try{
+              if(response.chunkedResponse){
+                const chunks=new Array(Number(response.totalChunks||0));
+                let nextIndex=0;
+                const worker=async()=>{
+                  while(true){
+                    const index=nextIndex++;
+                    if(index>=chunks.length)return;
+                    chunks[index]=await fetchServerResponseChunk(requestId,index);
+                  }
+                };
+                const workers=Array.from({length:Math.min(6,chunks.length)},()=>worker());
+                await Promise.all(workers);
+                const fullResponse=JSON.parse(chunks.join(""));
+                fullResponse.ok
+                  ? resolve(fullResponse.result)
+                  : reject(new Error(fullResponse.error||"No se pudo completar la solicitud."));
+                return;
+              }
+              response.ok?resolve(response.result):reject(new Error(response.error||"No se pudo completar la solicitud."));
+            }catch(error){
+              reject(error);
+            }
           };
           script.onerror=()=>{
             if(completed)return;
@@ -1525,16 +1574,11 @@
       if(!fileName)return;
       setStatus(statusElement,"Cargando audio…");
       try{
-        const auth=adminCode
-          ? {adminCode,participantCode}
-          : {sessionId:state.sessionId};
-        const info=await callServer("obtenerAudioInfo",Object.assign({fileName},auth));
-        const total=Math.ceil(info.base64Length/info.chunkSize);let base64="";
-        for(let chunkIndex=0;chunkIndex<total;chunkIndex++){
-          const part=await callServer("obtenerAudioFragmento",Object.assign({fileName,chunkIndex},auth));
-          base64+=part.chunk;
-        }
-        audioElement.src=URL.createObjectURL(base64ToBlob(base64,info.mimeType));
+        const loaded=await fetchRemoteAudioBlob(fileName,adminCode,participantCode);
+        if(audioElement.dataset.objectUrl)URL.revokeObjectURL(audioElement.dataset.objectUrl);
+        const objectUrl=URL.createObjectURL(loaded.blob);
+        audioElement.dataset.objectUrl=objectUrl;
+        audioElement.src=objectUrl;
         audioElement.classList.remove("hide");audioElement.play().catch(()=>{});
         setStatus(statusElement,"","ok");
       }catch(error){setStatus(statusElement,error.message,"bad")}
